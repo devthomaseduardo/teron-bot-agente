@@ -134,6 +134,12 @@ export interface OwnerOutbound {
   createdAt: string;
   sent: boolean;
   sentAt?: string;
+  /** claim em voo (anti-race) */
+  claiming?: boolean;
+  claimAt?: string;
+  attempts?: number;
+  lastError?: string;
+  note?: string;
 }
 
 /** Snapshot operacional da loja */

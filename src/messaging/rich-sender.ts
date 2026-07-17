@@ -42,24 +42,6 @@ function sanitizeSections(sections: MsgListSection[]): MsgListSection[] {
   }));
 }
 
-/**
- * Texto curto para description do modal (limite WA ~60).
- * Estilo banco: uma linha clara, sem menu 1️⃣.
- */
-function bankListDescription(payload: RichMessage, text: string): string {
-  const fromList = (payload.list?.description || '').trim();
-  if (fromList) return clip(fromList, 60);
-  const intro = (payload.intro || payload.text || text || '').trim();
-  if (!intro) return 'Toque e escolha uma opção';
-  // primeira linha limpa
-  const first = intro
-    .split('\n')
-    .map((l) => l.replace(/\*/g, '').trim())
-    .filter(Boolean)
-    .find((l) => !/^[0-9]/.test(l) && !l.startsWith('─'));
-  return clip(first || 'Toque e escolha uma opção', 60);
-}
-
 export class RichSender {
   private limiter: RateLimiter;
   private queue: Promise<void> = Promise.resolve();
@@ -132,14 +114,34 @@ export class RichSender {
     const hasList = Boolean(payload.list?.sections?.length);
     const hasButtons = !hasList && Boolean(payload.buttons?.length);
 
-    // ── LISTA MODAL (1 mensagem estilo banco) ──────────────
+    // ── LISTA MODAL ────────────────────────────────────────
+    // Padrão: 1) mensagem de texto  2) modal só com opções
     if (hasList && payload.list) {
-      const listTitle = clip(payload.list.title || 'Menu', 60) || 'Menu';
-      const listDesc = bankListDescription(payload, text);
+      const listTitle = clip(payload.list.title || 'Opções', 24) || 'Opções';
+      // cabeçalho do modal enxuto (o contexto vai na bolha de texto)
+      const listDesc = clip(
+        payload.list.description || 'Toque e escolha',
+        60
+      ) || 'Toque e escolha';
       const buttonText =
-        clip(payload.list.buttonText || 'Ver opções', 20) || 'Ver opções';
+        clip(payload.list.buttonText || 'Opções', 20) || 'Opções';
       const footer = clip(payload.list.footer || 'Atendimento', 60) || 'Atendimento';
-      const sections = sanitizeSections(payload.list.sections);
+      // modal: só título da opção (sem description nas rows)
+      const sections = sanitizeSections(payload.list.sections).map((sec) => ({
+        ...sec,
+        rows: sec.rows.map((r) => ({
+          rowId: r.rowId,
+          title: r.title,
+          // força só o texto da opção
+          description: undefined,
+        })),
+      }));
+
+      const preMsg = clip(
+        (payload.intro || payload.text || text || '').trim() ||
+          'Escolha uma opção 👇',
+        900
+      );
 
       const sig = `list:${listTitle}:${sections
         .flatMap((s) => s.rows.map((r) => r.rowId))
@@ -149,11 +151,10 @@ export class RichSender {
       // não reenvia o MESMO modal em menos de 25s
       if (prev && prev.sig === sig && now - prev.at < 25_000) {
         ui?.sys(`skip repeat modal ${listTitle}`);
-        // nudge mínimo em vez de spam
         try {
           await this.client.sendText(
             target,
-            'É só tocar no botão *Ver opções* da mensagem acima 👆'
+            'É só tocar no botão *Opções* da mensagem acima 👆'
           );
           this.limiter.recordSend(chatId);
         } catch {
@@ -162,7 +163,22 @@ export class RichSender {
         return;
       }
 
-      await this.typing(target, 500);
+      // 1) SEMPRE mensagem de texto antes do modal
+      if (preMsg) {
+        await this.typing(target, computeTypingMs(preMsg, this.cfg));
+        try {
+          await this.client.sendText(target, preMsg);
+          this.limiter.recordSend(chatId);
+          logOut(chatId, target, preMsg, source, ui);
+          ui?.outbound(target, preMsg.slice(0, 80), source);
+        } catch (e) {
+          ui?.warn(`pre-modal: ${String(e).slice(0, 80)}`);
+        }
+        await sleep(computeBubbleGap(this.cfg));
+      }
+
+      // 2) modal só com opções
+      await this.typing(target, 400);
       try {
         await this.client.sendListMessage(target, {
           buttonText,
@@ -174,11 +190,16 @@ export class RichSender {
         this.limiter.recordSend(chatId);
         this.lastSent.set(chatId, { sig, at: now });
         ui?.outbound(target, `[modal] ${listTitle}`, source);
-        logOut(chatId, target, `[list] ${listTitle} · ${listDesc}`, source, ui);
+        logOut(
+          chatId,
+          target,
+          `[list] ${listTitle} · ${sections.flatMap((s) => s.rows.map((r) => r.title)).join(', ')}`,
+          source,
+          ui
+        );
       } catch (e) {
         ui?.warn(`lista modal falhou: ${String(e).slice(0, 120)}`);
-        // Fallback: texto limpo estilo card (sem 1️⃣)
-        const fallback = buildListFallback(listTitle, listDesc, sections);
+        const fallback = buildListFallback(listTitle, preMsg || listDesc, sections);
         try {
           await this.client.sendText(target, fallback);
           this.limiter.recordSend(chatId);
@@ -294,7 +315,15 @@ export class RichSender {
         logOut(chatId, target, mainText, source, ui);
         ui?.outbound(target, mainText.slice(0, 80), source);
       } catch (e) {
-        ui?.error(`text: ${String(e)}`);
+        const msg =
+          e instanceof Error
+            ? e.message || e.name
+            : typeof e === 'string'
+              ? e
+              : JSON.stringify(e)?.slice(0, 120) || String(e);
+        ui?.error(`text: ${msg}`);
+        // propaga falha (outbox/lifecycle precisam saber)
+        throw e;
       }
     }
   }

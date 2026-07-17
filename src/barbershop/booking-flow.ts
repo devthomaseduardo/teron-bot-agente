@@ -95,6 +95,24 @@ function isMenuCommand(text: string): boolean {
   return n === 'menu' || n === '0' || n === 'inicio' || n === 'começar' || n === 'comecar';
 }
 
+/** oi / oii / ola / bom dia… — sempre volta ao menu modal */
+function isGreetingText(n: string): boolean {
+  const t = (n || '').trim().toLowerCase();
+  if (!t || t.length > 40) return false;
+  // oi, oii, oie, ola, olá, eae, eai, fala, salve, hey…
+  if (/^(oi+|o+ie|ola+|eae|eai|iae|fala|salve|hey|hi|hello)[\s!.?]*$/.test(t)) {
+    return true;
+  }
+  if (
+    /^(bom dia|boa tarde|boa noite|voltar|recomeçar|recomecar|inicio|início)[\s!.?]*$/.test(
+      t
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function rich(r: RichMessage, source = 'barbershop'): BookingResult {
   return { handled: true, text: r.text, source, rich: r };
 }
@@ -130,31 +148,16 @@ export async function runBarbershopFlow(
   let current = stepOf(chatId);
   const inBooking = BOOKING_STEPS.includes(current);
 
-  // RECOMEÇAR sempre: 0 / menu / oi / olá / bom dia… (estilo banco)
-  const isGreeting =
-    n === 'oi' ||
-    n === 'ola' ||
-    n === 'olá' ||
-    n === 'oie' ||
-    n === 'eae' ||
-    n === 'bom dia' ||
-    n === 'boa tarde' ||
-    n === 'boa noite' ||
-    n === 'voltar' ||
-    n === 'recomeçar' ||
-    n === 'recomecar' ||
-    n === 'inicio' ||
-    n === 'início';
+  // RECOMEÇAR sempre: 0 / menu / oi / oii / olá / bom dia… (estilo banco)
+  const isGreeting = isGreetingText(n) || isGreetingText(ne);
 
   if (isMenuCommand(text) || ne === '0' || isGreeting) {
     sessionStore.setHandoff(chatId, false);
     sessionStore.clearFails(chatId);
-    // "oi" no meio do fluxo NÃO fica preso — volta ao menu principal
-    if (isGreeting || isMenuCommand(text) || ne === '0') {
-      sessionStore.resetConversation(chatId, { keepName: true });
-      setStep(chatId, 'menu');
-      return rich(tplMenu());
-    }
+    // "oi" no meio do fluxo NÃO fica preso — volta ao menu principal (modal)
+    sessionStore.resetConversation(chatId, { keepName: true });
+    setStep(chatId, 'menu');
+    return rich(tplMenu());
   }
 
   // Reclamação em andamento: grava ticket
@@ -498,7 +501,7 @@ export async function runBarbershopFlow(
       n.includes('espera') ||
       n.includes('status')
     ) {
-      if (!appt || ['cancelled', 'no_show'].includes(appt.status)) {
+      if (!appt || ['cancelled', 'no_show', 'rated'].includes(appt.status)) {
         return rich(
           tplActions('Status', 'Você não está na fila agora', [
             { id: '1', title: '1 · Agendar', desc: 'Marcar horário' },
@@ -506,7 +509,26 @@ export async function runBarbershopFlow(
           ])
         );
       }
+      // done: não finge que está na fila — oferece avaliar / remarcar
+      if (appt.status === 'done') {
+        setStep(chatId, 'menu');
+        return rich(
+          tplActions(
+            'Atendimento finalizado',
+            `${appt.serviceName} · ${appt.date}`,
+            [
+              { id: 'avaliar', title: 'Avaliar', desc: 'Nota de 1 a 5' },
+              { id: '1', title: 'Agendar de novo', desc: 'Novo horário' },
+              { id: '0', title: 'Menu', desc: 'Início' },
+            ],
+            'Opções',
+            `Seu último atendimento já foi finalizado ✅\n\nQuer avaliar ou marcar outro?`
+          )
+        );
+      }
       const snap = estimateWait(appt);
+      setStep(chatId, 'status_view' as BookingStep);
+      sessionStore.setProfile(chatId, 'appt_id', appt.id);
       return rich(
         tplStatus({
           id: appt.id,
@@ -522,11 +544,13 @@ export async function runBarbershopFlow(
       ne === 'cheguei' ||
       n.includes('ja cheguei') ||
       n.includes('já cheguei') ||
-      ne === 'checkin'
+      ne === 'checkin' ||
+      // "2" só conta como cheguei se veio do modal de status
+      (ne === '2' && current === ('status_view' as BookingStep))
     ) {
-      if (!appt) {
+      if (!appt || ['cancelled', 'no_show', 'done', 'rated'].includes(appt.status)) {
         return rich(
-          tplActions('Check-in', 'Sem agendamento ativo', [
+          tplActions('Check-in', 'Sem agendamento ativo pra hoje', [
             { id: '1', title: '1 · Agendar', desc: 'Marcar horário' },
             { id: '0', title: '0 · Menu', desc: 'Início' },
           ])
@@ -536,6 +560,7 @@ export async function runBarbershopFlow(
       const snap = estimateWait({ ...appt, status: 'waiting' });
       setStep(chatId, 'waiting_engage');
       sessionStore.setProfile(chatId, 'appt_id', appt.id);
+      sessionStore.clearFails(chatId);
       return rich(
         tplWaitingMenu({
           name: appt.clientName,
@@ -553,7 +578,8 @@ export async function runBarbershopFlow(
       ne === 'pagamento' ||
       ne === 'maquininha' ||
       n.includes('pagar') ||
-      n.includes('pagamento')
+      n.includes('pagamento') ||
+      (ne === '1' && current === ('status_view' as BookingStep))
     ) {
       // menu 5 = pagamento do agendamento ou formas gerais
       if (appt && appt.payment?.status !== 'confirmed') {
@@ -1174,6 +1200,46 @@ function handleComplaintBody(chatId: string, text: string): BookingResult {
     setStep(chatId, 'menu');
     return rich(tplMenu());
   }
+
+  // Cliente digitou 1–5 achando que era avaliação (spam "mande nota" no meio da reclamação)
+  const onlyStars = text.replace(/\D/g, '');
+  if (/^[1-5]$/.test(onlyStars) && text.trim().length <= 3) {
+    const appt =
+      getAppointment(sessionStore.get(chatId).profile.appt_id || '') ||
+      getAppointmentByChat(chatId, false);
+    if (appt && ['done', 'rated', 'in_service'].includes(appt.status)) {
+      sessionStore.setProfile(chatId, 'appt_id', appt.id);
+      sessionStore.setProfile(chatId, 'rate_stars', onlyStars);
+      setStep(chatId, 'rate_comment');
+      return rich(
+        tplActions(
+          `${starsBar(Number(onlyStars))} Obrigado`,
+          'Quer deixar um comentário?',
+          [
+            { id: 'pular', title: 'Pular', desc: 'Só a nota' },
+            { id: '0', title: 'Menu', desc: 'Voltar' },
+          ],
+          'Opções',
+          `Anotei *${onlyStars} estrelas* ⭐\n\nSe quiser, manda um comentário rápido — ou toca em *Pular*.`
+        )
+      );
+    }
+    return textOnly(
+      `Recebi *${onlyStars}* — mas tava no modo *reclamação*.\n\n` +
+        `Descreve o problema em uma frase (ex: "corte ficou irregular").\n` +
+        `Ou digite *0* pra cancelar e *avaliar* pra dar nota.`
+    );
+  }
+
+  // Rejeita lixo curto ("ok", "4", "a") — não abre chamado fantasma
+  if (text.trim().length < 8) {
+    return textOnly(
+      `Preciso de um pouco mais de detalhe 🙏\n\n` +
+        `Conta o que aconteceu em *uma mensagem* (mín. uma frase).\n` +
+        `Ou digite *0* pra cancelar.`
+    );
+  }
+
   const name = sessionStore.get(chatId).profile.name;
   const appt = getAppointmentByChat(chatId);
   const ticket = createTicket({
@@ -1208,35 +1274,44 @@ function resolveChoice(raw: string): string {
   // 1ª linha (lista manda título + descrição em 2 linhas)
   const first = text.split('\n')[0].trim();
 
-  // "1 · …" | "1. …" | "1) …" | "1- …"
-  const lead = first.match(/^(\d{1,2})\s*[·.\-)]\s*/);
+  // "1 · Cheguei" → preferir keyword do título, não só o número
+  // (senão "2 · Cheguei" vira "2" = preços e quebra o check-in)
+  const lead = first.match(/^(\d{1,2})\s*[·.\-)]\s*(.*)$/);
+  const restRaw = lead ? lead[2] : first;
+  const t = normalize(restRaw || first);
+
+  // keywords SEMPRE antes do número puro
+  if (/cheguei|check.?in|ja to na|já tô na|ja to aqui|já tô aqui/.test(t)) {
+    return 'cheguei';
+  }
+  if (/^pagar|pagamento|pix|maquininha/.test(t) || t === 'pagar') return 'pagar';
+  if (/^agendar|marcar horario|agendar agora/.test(t) || t === 'agendar') return '1';
+  if (/^preco|preços|precos|valores|tabela/.test(t) || t === 'precos' || t === 'preços')
+    return '2';
+  if (/^equipe|barbeiro|profissional/.test(t) || t === 'equipe') return '3';
+  if (/\bgps\b|como chegar|endereco|mapa|localiza/.test(t)) return '4';
+  if (/status|fila|espera|minha vez|como ta sua|como tá sua/.test(t)) return '6';
+  if (/meus horario|meu horario|horarios/.test(t)) return '7';
+  if (/atendente|falar com|humano/.test(t)) return '8';
+  if (/reclam|problema|chamado|abrir chamado/.test(t)) return '9';
+  if (/confirmar|pode confirmar|presenca|presença/.test(t)) return '1';
+  if (/cancelar|melhor nao|melhor não/.test(t)) return '2';
+  if (/menu|inicio|voltar|recomeçar|recomecar/.test(t)) return '0';
+  if (/atualizar espera|atualizar|quanto falta/.test(t)) return 'status';
+  if (/pausar/.test(t)) return '5';
+
+  // slug direto (rowId semântico do modal)
+  const slug = first.toLowerCase().replace(/[^\w]/g, '');
+  if (['qualquer', 'cheguei', 'remarcar', 'cancelar', 'pagar'].includes(slug)) {
+    return slug;
+  }
+  if (slug === 'pagar' || first.toLowerCase() === 'pagar') return 'pagar';
+
+  // "1 · …" só número quando não achou keyword
   if (lead) return lead[1];
 
   // só número
   if (/^\d{1,2}$/.test(first)) return first;
-
-  // slug direto
-  const slug = first.toLowerCase().replace(/[^\w]/g, '');
-  if (['qualquer', 'cheguei', 'remarcar', 'cancelar', 'pagar'].includes(slug)) {
-    return slug === 'pagar' ? '5' : slug;
-  }
-
-  // keywords no título (com ou sem número)
-  const t = normalize(first);
-  if (/^agendar|marcar horario/.test(t) || t === 'agendar') return '1';
-  if (/^preco|preços|precos|valores|servicos|serviços/.test(t) || t === 'precos' || t === 'preços')
-    return '2';
-  if (/^equipe|barbeiro|profissional/.test(t) || t === 'equipe') return '3';
-  if (/chegar|gps|local|endereco|mapa/.test(t)) return '4';
-  if (/^pagamento|pagar|pix|maquininha/.test(t) || t === 'pagamento') return '5';
-  if (/status|fila|espera|minha vez/.test(t)) return '6';
-  if (/meus horario|meu horario|horarios/.test(t)) return '7';
-  if (/atendente|falar com|humano/.test(t)) return '8';
-  if (/reclam|problema|chamado/.test(t)) return '9';
-  if (/confirmar|pode confirmar/.test(t)) return '1';
-  if (/cancelar|melhor nao|melhor não/.test(t)) return '2';
-  if (/menu|inicio|voltar|recomeçar|recomecar/.test(t)) return '0';
-  if (/cheguei|check.?in/.test(t)) return 'cheguei';
   if (/qualquer|tanto faz/.test(t)) return 'qualquer';
   if (/atualizar|atualiza/.test(t)) return '1';
   if (/pausar|avisos/.test(t)) return '5';

@@ -43,7 +43,9 @@ export function loadConfig(): AppConfig {
   const connections = loadConnections();
   const active = getActiveConnection(connections);
 
-  const nicheId = custom?.nicheId || process.env.NICHE_ID || base.nicheId;
+  // Env do Docker/deploy ganha de business.json (evita niche genérico matar barbershop)
+  const nicheId =
+    process.env.NICHE_ID || custom?.nicheId || base.nicheId;
   let niche: NicheTemplate = getNiche(nicheId);
 
   if (custom?.niche) {

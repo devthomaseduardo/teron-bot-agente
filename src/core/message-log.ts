@@ -21,14 +21,36 @@ function ensureDir(): void {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-/** Grava cada mensagem para análise / CLI */
+/** Grava cada mensagem para análise / CLI / painel ao vivo */
 export function logMessage(entry: MessageLogEntry): void {
   try {
     ensureDir();
     fs.appendFileSync(MESSAGES_FILE, JSON.stringify(entry) + '\n', 'utf8');
+    // carimbo para watchers (SSE do painel)
+    try {
+      fs.writeFileSync(
+        path.join(DATA_DIR, 'messages.stamp'),
+        entry.at || new Date().toISOString(),
+        'utf8'
+      );
+    } catch {
+      /* ignore stamp */
+    }
   } catch (err) {
     console.error('[message-log] falha:', err);
   }
+}
+
+/** Últimas mensagens, opcionalmente de um chat */
+export function readRecentMessages(
+  limit = 80,
+  chatId?: string
+): MessageLogEntry[] {
+  const all = readMessages(Math.max(limit * 4, 200));
+  const filtered = chatId
+    ? all.filter((m) => m.chatId === chatId || m.from === chatId)
+    : all;
+  return filtered.slice(-limit);
 }
 
 export function readMessages(limit?: number): MessageLogEntry[] {

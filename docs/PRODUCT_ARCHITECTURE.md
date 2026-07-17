@@ -1,17 +1,23 @@
-# Arquitetura do produto — Agente Comercial multi-nicho
+# Arquitetura do produto — Motor operacional multi-vertical
 
-Visão: **mesmo motor, mesmo painel, nichos plugáveis**, instalação **100% online**.
+> **Posicionamento:** plataforma de **operação comercial** (não “chatbot”).  
+> WhatsApp é o **primeiro canal**; o valor é o **motor + painel + automações**.  
+> Estratégia de marca e venda: ver [`PRODUCT_STRATEGY.md`](./PRODUCT_STRATEGY.md).
+
+Visão técnica: **mesmo núcleo, mesmo painel, verticais e módulos plugáveis**, instalação **100% online**.
 
 ---
 
 ## 1. Problema que resolvemos
 
-| Dor do cliente final (loja) | Como o produto resolve |
+| Dor do negócio (o que o cliente paga para resolver) | Como o sistema resolve |
 |---|---|
-| Atender WhatsApp 24/7 | Bot modal + fluxos + IA opcional |
-| Falta / não pagou / reclamou | Painel + automação operacional |
-| Instalar sem técnico na loja | Provisionamento cloud + QR no painel |
-| Um código por nicho vira caos | **Plugin de nicho** + núcleo único |
+| Lead/pedido sem resposta → perda de faturamento | Atendimento 24h + fluxos que **fecham** (agenda, orçamento, cobrança) |
+| Caos operacional no chat | Agenda, fila, status, painel do dono |
+| Falta / não pagou / reclamou | Automações + tickets + cobrança |
+| Custo de secretária / retrabalho | Funcionário virtual que **executa** operações |
+| Dependência de técnico para configurar | Self-service (tenant + QR + painel) |
+| Customizar cada vertical do zero | Templates de vertical + módulos (código único) |
 
 ---
 

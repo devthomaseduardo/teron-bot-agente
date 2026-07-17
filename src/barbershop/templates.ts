@@ -16,41 +16,51 @@ function clip(s: string, n: number): string {
   return t.slice(0, n - 1) + '…';
 }
 
-function row(rowId: string, title: string, description?: string): MsgListRow {
+/**
+ * Linha do modal: SÓ o texto da opção (title).
+ * Descrição do row fica vazia — o contexto vai na mensagem ANTES do modal.
+ */
+function row(rowId: string, title: string, _description?: string): MsgListRow {
+  const cleanTitle = String(title || '')
+    .replace(/^\d{1,2}\s*[·.\-)]\s*/, '')
+    .trim();
   return {
-    rowId,
-    title: clip(title, 24),
-    description: description ? clip(description, 72) : undefined,
+    rowId: String(rowId),
+    title: clip(cleanTitle, 24) || 'Opção',
+    // sem description = lista limpa, só opção
   };
 }
 
+/**
+ * Sempre: mensagem de texto (intro) + modal com opções puras.
+ * modalOnly=false → rich-sender manda a bolha de texto antes da lista.
+ */
 function withList(
   list: NonNullable<RichMessage['list']>,
   introMsg?: string
 ): RichMessage {
-  const title = clip(list.title || 'Menu', 60);
-  const description = clip(list.description || 'É só tocar e escolher', 60);
-  const buttonText = clip(list.buttonText || 'Ver opções', 20);
+  const title = clip(list.title || 'Opções', 24);
+  const buttonText = clip(list.buttonText || 'Opções', 20);
   const footer = clip(list.footer || FOOTER, 60);
 
-  const intro = (
-    introMsg ||
-    `*${title}*\n${description}\n\nÉ só tocar no botão aqui embaixo 👇`
-  ).trim();
+  // mensagem ANTES do modal (humana, curta)
+  const intro = (introMsg || list.description || 'Escolha uma opção 👇').trim();
 
   return {
     text: intro,
     intro,
-    modalOnly: true,
+    // false = sempre manda texto antes do modal
+    modalOnly: false,
     keepTogether: true,
     list: {
       buttonText,
+      // cabeçalho do modal enxuto — detalhe já foi na mensagem
       title,
-      description,
+      description: 'Toque e escolha',
       footer,
       sections: list.sections.map((sec) => ({
-        title: clip(sec.title, 24),
-        rows: sec.rows.map((r) => row(r.rowId, r.title, r.description)),
+        title: clip(sec.title || 'Opções', 24),
+        rows: sec.rows.map((r) => row(r.rowId, r.title)),
       })),
     },
     buttons: undefined,
@@ -73,40 +83,39 @@ export function tplActions(
       sections: [
         {
           title: 'Opções',
-          rows: actions.map((a) => row(a.id, a.title, a.desc)),
+          rows: actions.map((a) => row(a.id, a.title)),
         },
       ],
     },
-    introMsg || `${description}\n\nMe fala o que prefere 👇`
+    introMsg || description
   );
 }
 
 export function tplMenu(): RichMessage {
   const s = loadBarbershop().shop;
-  // Estilo banco: UMA lista — description = frase curta (limite WA)
   return withList(
     {
-      buttonText: '📋 Menu',
-      title: s.name,
-      description: 'Olá! Como podemos ajudar?',
+      buttonText: 'Menu',
+      title: 'Menu',
+      description: 'Como podemos ajudar?',
       sections: [
         {
-          title: 'Atendimento',
+          title: 'Opções',
           rows: [
-            row('1', 'Agendar', 'Marcar horário'),
-            row('2', 'Preços', 'Valores e duração'),
-            row('3', 'Equipe', 'Nossos profissionais'),
-            row('4', 'Como chegar', 'Endereço e GPS'),
-            row('5', 'Pagamento', 'PIX ou maquininha'),
-            row('6', 'Status / fila', 'Tempo de espera'),
-            row('7', 'Meus horários', 'Remarcar ou cancelar'),
-            row('8', 'Falar com a loja', 'Atendente'),
-            row('9', 'Reclamação', 'Abrir chamado'),
+            row('1', 'Agendar'),
+            row('2', 'Preços'),
+            row('3', 'Equipe'),
+            row('4', 'Como chegar'),
+            row('5', 'Pagamento'),
+            row('6', 'Status / fila'),
+            row('7', 'Meus horários'),
+            row('8', 'Falar com a loja'),
+            row('9', 'Reclamação'),
           ],
         },
       ],
     },
-    `Olá! Como podemos ajudar?`
+    `Olá! Sou o atendimento da *${clip(s.name, 40)}*.\nComo posso te ajudar?`
   );
 }
 
@@ -136,12 +145,12 @@ export function tplWaitingMenu(opts: {
         {
           title: 'Enquanto espera',
           rows: [
-            row('1', '1 · Atualizar espera', 'Quanto falta?'),
-            row('2', '2 · Pagar', 'PIX ou maquininha'),
-            row('3', '3 · GPS', 'Como chegar'),
-            row('4', '4 · Meus horários', 'Ver ou remarcar'),
-            row('5', '5 · Pausar avisos', 'Sem spam, ok'),
-            row('0', '0 · Menu', 'Voltar ao início'),
+            row('1', 'Atualizar espera', 'Quanto falta?'),
+            row('2', 'Pagar', 'PIX ou maquininha'),
+            row('3', 'Como chegar', 'GPS da loja'),
+            row('4', 'Meus horários', 'Ver ou remarcar'),
+            row('5', 'Pausar avisos', 'Sem spam'),
+            row('0', 'Menu', 'Voltar'),
           ],
         },
       ],
@@ -150,64 +159,75 @@ export function tplWaitingMenu(opts: {
   );
 }
 
+/** Tabela de preços (menu 2) — só consulta, não inicia agendamento */
 export function tplServices(): RichMessage {
+  const { services } = loadBarbershop();
+  // preço entra no TEXTO da opção (único campo do modal)
+  const priceLines = services
+    .map((s) => `• ${s.name} — ${money(s.price)} (${duration(s.durationMin)})`)
+    .join('\n');
+  return withList(
+    {
+      buttonText: 'Preços',
+      title: 'Preços',
+      sections: [
+        {
+          title: 'Opções',
+          rows: [
+            ...services.map((s) =>
+              row(`svc_${s.id}`, clip(`${s.name} ${money(s.price)}`, 24))
+            ),
+            row('1', 'Agendar agora'),
+            row('0', 'Menu'),
+          ],
+        },
+      ],
+    },
+    `Nossa tabela:\n${priceLines}\n\nQuer agendar? Toque em *Agendar agora*.`
+  );
+}
+
+/** Início do fluxo de agendamento (menu 1) */
+export function tplServicesCover(): RichMessage {
   const { services } = loadBarbershop();
   return withList(
     {
-      buttonText: '💰 Serviços',
+      buttonText: 'Serviços',
       title: 'Serviços',
-      description: 'Escolha o serviço desejado',
       sections: [
         {
-          title: 'Tabela',
+          title: 'Opções',
           rows: services.map((s, i) =>
-            row(
-              String(i + 1),
-              s.name,
-              `${money(s.price)} · ${duration(s.durationMin)}`
-            )
+            row(String(i + 1), clip(`${s.name}`, 24))
           ),
         },
       ],
     },
-    'Escolha o serviço desejado'
+    'Beleza! Qual serviço você quer?'
   );
-}
-
-export function tplServicesCover(): RichMessage {
-  return tplServices();
 }
 
 export function tplBarbers(service?: ServiceItem): RichMessage {
   const { barbers } = loadBarbershop();
-  const desc = service
-    ? clip(`${service.name} · ${money(service.price)}`, 60)
-    : 'Nossa equipe';
-
   return withList(
     {
-      buttonText: '💇 Equipe',
-      title: 'Barbeiros',
-      description: desc,
+      buttonText: 'Equipe',
+      title: 'Equipe',
       sections: [
         {
-          title: 'Profissionais',
+          title: 'Opções',
           rows: [
             ...barbers.map((b, i) =>
-              row(
-                String(i + 1),
-                `${i + 1} · ${b.nickname || b.name}`,
-                b.specialty
-              )
+              row(String(i + 1), b.nickname || b.name)
             ),
-            row('qualquer', 'Tanto faz', 'Quem estiver livre'),
+            row('qualquer', 'Tanto faz'),
           ],
         },
       ],
     },
     service
-      ? `Escolha o profissional · ${service.name}`
-      : 'Escolha o profissional'
+      ? `*${service.name}* · ${money(service.price)}\nEscolha o profissional:`
+      : 'Escolha o profissional:'
   );
 }
 
@@ -216,23 +236,16 @@ export function tplDays(barber: Barber, service: ServiceItem): RichMessage {
   const nick = barber.nickname || barber.name;
   return withList(
     {
-      buttonText: '📅 Dias',
-      title: 'Dias livres',
-      description: clip(`${nick} · ${service.name}`, 60),
+      buttonText: 'Dias',
+      title: 'Dias',
       sections: [
         {
-          title: 'Quando',
-          rows: days.map((d, i) =>
-            row(
-              String(i + 1),
-              `${i + 1} · ${d.label}`,
-              `${d.slots.length} horários`
-            )
-          ),
+          title: 'Opções',
+          rows: days.map((d, i) => row(String(i + 1), d.label)),
         },
       ],
     },
-    `${nick} · escolha o dia`
+    `Com *${nick}* · ${service.name}\nQual dia fica melhor?`
   );
 }
 
@@ -246,19 +259,16 @@ export function tplSlots(
   const nick = barber.nickname || barber.name;
   return withList(
     {
-      buttonText: '⏰ Horários',
-      title: clip(dateLabel, 60),
-      description: clip(`${money(service.price)} · ${duration(service.durationMin)}`, 60),
+      buttonText: 'Horários',
+      title: 'Horários',
       sections: [
         {
-          title: 'Horários livres',
-          rows: slots.map((t, i) =>
-            row(String(i + 1), `${i + 1} · ${t}`, duration(service.durationMin))
-          ),
+          title: 'Opções',
+          rows: slots.map((t, i) => row(String(i + 1), t)),
         },
       ],
     },
-    `${dateLabel} · escolha o horário`
+    `*${dateLabel}* com ${nick}\n${service.name} · ${money(service.price)} · ${duration(service.durationMin)}\nEscolha o horário:`
   );
 }
 
@@ -447,9 +457,9 @@ export function tplStatus(opts: {
         {
           title: 'Ações',
           rows: [
-            row('1', '1 · Pagar', 'PIX ou maquininha'),
-            row('2', '2 · Cheguei', 'Já tô na loja'),
-            row('0', '0 · Menu', 'Voltar'),
+            row('pagar', 'Pagar', 'PIX ou maquininha'),
+            row('cheguei', 'Cheguei', 'Já tô na loja'),
+            row('0', 'Menu', 'Voltar'),
           ],
         },
       ],

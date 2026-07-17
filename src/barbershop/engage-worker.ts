@@ -32,6 +32,17 @@ async function tick(
       ['waiting', 'checked_in'].includes(a.status)
     );
     for (const appt of waiting) {
+      const cid = String(appt.chatId || '').toLowerCase();
+      // nunca engajar chat de teste / inválido
+      if (
+        !cid ||
+        cid.includes('barber-test') ||
+        cid.includes('fix-oi') ||
+        cid.includes('test@') ||
+        !cid.includes('@')
+      ) {
+        continue;
+      }
       // se cliente falou nos últimos 2 min, não interrompe
       try {
         const sess = sessionStore.get(appt.chatId);

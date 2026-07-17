@@ -46,6 +46,28 @@ import {
   getProcessTenant,
 } from '../platform/tenant-runtime.js';
 import type { VisitStatus } from '../barbershop/types.js';
+import {
+  growthDashboard,
+  growthFunnel,
+  ingestPaste,
+  listOpportunities,
+  getOpportunity,
+  markContacted,
+  markDismissed,
+  markWon,
+  markLost,
+  buildWhatsAppLink,
+  openGrowthCount,
+  classifyDemand,
+} from '../growth/index.js';
+import {
+  attachSseClient,
+  startLiveWatchers,
+  notifyChange,
+  liveClientCount,
+} from './live.js';
+import { readRecentMessages } from '../core/message-log.js';
+import { resolveNicheLabels } from './niche-labels.js';
 
 const PUBLIC = path.join(process.cwd(), 'panel', 'public');
 const PORT = Number(process.env.PANEL_PORT || 8787);
@@ -413,18 +435,71 @@ async function handleApi(
     return;
   }
 
-  // setup self-service: loja + equipe + serviços
+  // setup self-service: loja + equipe + serviços + horários
   if (pathname === '/api/setup/shop' && req.method === 'POST') {
     const body = JSON.parse((await readBody(req)) || '{}');
     const cur = loadBarbershop();
-    if (body.shop) cur.shop = { ...cur.shop, ...body.shop };
+    if (body.shop) {
+      cur.shop = {
+        ...cur.shop,
+        ...body.shop,
+        // daysOpen / slotMinutes do dono
+        daysOpen: Array.isArray(body.shop.daysOpen)
+          ? body.shop.daysOpen.map(Number)
+          : cur.shop.daysOpen,
+        slotMinutes:
+          body.shop.slotMinutes != null
+            ? Number(body.shop.slotMinutes) || cur.shop.slotMinutes
+            : cur.shop.slotMinutes,
+      };
+    }
     if (Array.isArray(body.services)) cur.services = body.services;
-    if (Array.isArray(body.barbers)) cur.barbers = body.barbers;
+    if (Array.isArray(body.barbers)) {
+      // preserva schedule se o client mandou parcial
+      cur.barbers = body.barbers.map((b: Record<string, unknown>, i: number) => {
+        const prev = cur.barbers[i] || cur.barbers.find((x) => x.id === b.id);
+        return {
+          id: String(b.id || prev?.id || `b${i + 1}`),
+          name: String(b.name || prev?.name || 'Profissional'),
+          nickname: String(b.nickname || prev?.nickname || b.name || 'Pro'),
+          specialty: String(b.specialty || prev?.specialty || 'Geral'),
+          schedule:
+            (b.schedule as Record<string, [string, string]>) ||
+            prev?.schedule ||
+            {
+              '1': ['09:00', '18:00'],
+              '2': ['09:00', '18:00'],
+              '3': ['09:00', '18:00'],
+              '4': ['09:00', '18:00'],
+              '5': ['09:00', '18:00'],
+              '6': ['09:00', '14:00'],
+            },
+          onDuty: b.onDuty != null ? Boolean(b.onDuty) : prev?.onDuty !== false,
+        };
+      });
+    }
     saveBarbershop(cur);
+    notifyChange('shop', 'panel', { action: 'setup_shop' });
     json(res, 200, {
       ok: true,
       shop: cur.shop,
+      barbers: cur.barbers,
+      services: cur.services,
       setup: setupStatus(tenantSlug || '_root'),
+    });
+    return;
+  }
+
+  // mensagens WhatsApp (inbox do painel)
+  if (pathname === '/api/messages' && req.method === 'GET') {
+    const url = new URL(req.url || '/', 'http://x');
+    const limit = Math.min(Number(url.searchParams.get('limit') || 80), 300);
+    const chatId = url.searchParams.get('chatId') || undefined;
+    const list = readRecentMessages(limit, chatId || undefined);
+    json(res, 200, {
+      messages: list,
+      count: list.length,
+      at: new Date().toISOString(),
     });
     return;
   }
@@ -437,6 +512,106 @@ async function handleApi(
       if (step) step.done = true;
     }
     json(res, 200, setup);
+    return;
+  }
+
+  // ── TERON Growth ─────────────────────────────────────────
+  if (pathname === '/api/growth/dashboard' && req.method === 'GET') {
+    json(res, 200, growthDashboard());
+    return;
+  }
+
+  if (pathname === '/api/growth/opportunities' && req.method === 'GET') {
+    const url = new URL(req.url || '/', 'http://x');
+    const status = url.searchParams.get('status') || undefined;
+    const all = url.searchParams.get('all') === '1';
+    const list = all
+      ? listOpportunities()
+      : listOpportunities(
+          status
+            ? { status: status as any }
+            : { status: ['new', 'delivered', 'contacted'] }
+        );
+    json(res, 200, { opportunities: list, funnel: growthFunnel() });
+    return;
+  }
+
+  if (pathname === '/api/growth/ingest' && req.method === 'POST') {
+    const body = JSON.parse((await readBody(req)) || '{}');
+    const text = String(body.text || body.rawText || '').trim();
+    const sourceUrl = body.sourceUrl ? String(body.sourceUrl) : undefined;
+    if (!text) {
+      json(res, 400, { error: 'text_required' });
+      return;
+    }
+    // se colou só URL, usa a URL como texto de contexto
+    const result = await ingestPaste({
+      text,
+      sourceUrl,
+      source: body.source || (sourceUrl ? 'paste' : 'manual'),
+    });
+    if (!result.opportunity) {
+      json(res, 200, {
+        ok: false,
+        discarded: result.discarded,
+        // ainda devolve classificação se útil
+        preview: await classifyDemand(text),
+      });
+      return;
+    }
+    json(res, 200, { ok: true, opportunity: result.opportunity });
+    return;
+  }
+
+  if (pathname === '/api/growth/classify' && req.method === 'POST') {
+    const body = JSON.parse((await readBody(req)) || '{}');
+    const text = String(body.text || '').trim();
+    if (!text) {
+      json(res, 400, { error: 'text_required' });
+      return;
+    }
+    const classification = await classifyDemand(text);
+    json(res, 200, { classification });
+    return;
+  }
+
+  const growthIdMatch = pathname.match(
+    /^\/api\/growth\/opportunities\/([^/]+)(?:\/(contact|dismiss|won|lost|wa))?$/
+  );
+  if (growthIdMatch && req.method === 'POST') {
+    const id = growthIdMatch[1];
+    const action = growthIdMatch[2] || 'contact';
+    const body = JSON.parse((await readBody(req)) || '{}');
+    let o = getOpportunity(id);
+    if (!o) {
+      json(res, 404, { error: 'not_found' });
+      return;
+    }
+    if (action === 'contact' || action === 'wa') {
+      o = markContacted(id);
+      const link = buildWhatsAppLink(id, body.phone);
+      json(res, 200, { opportunity: o, whatsapp: link });
+      return;
+    }
+    if (action === 'dismiss') {
+      o = markDismissed(id, body.note);
+      json(res, 200, { opportunity: o });
+      return;
+    }
+    if (action === 'won') {
+      o = markWon(id, {
+        revenue: body.revenue != null ? Number(body.revenue) : undefined,
+        bookingId: body.bookingId,
+      });
+      json(res, 200, { opportunity: o });
+      return;
+    }
+    if (action === 'lost') {
+      o = markLost(id);
+      json(res, 200, { opportunity: o });
+      return;
+    }
+    json(res, 400, { error: 'unknown_action' });
     return;
   }
 
@@ -550,19 +725,99 @@ async function handleApi(
     return;
   }
 
+  // ── Tempo real (SSE) ─────────────────────────────────────
+  if (pathname === '/api/events' && req.method === 'GET') {
+    attachSseClient(res, resolveOwnerTenant(req) || '_root');
+    // conexão fica aberta — não encerra a resposta
+    return;
+  }
+
+  if (pathname === '/api/live' && req.method === 'GET') {
+    json(res, 200, {
+      clients: liveClientCount(),
+      realtime: true,
+      at: new Date().toISOString(),
+    });
+    return;
+  }
+
   if (pathname === '/api/dashboard' && req.method === 'GET') {
-    const today = todaysAppointments();
-    const waiting = today.filter((a) =>
+    const todayList = todaysAppointments().slice().sort((a, b) =>
+      String(a.time || '').localeCompare(String(b.time || ''))
+    );
+    const waiting = todayList.filter((a) =>
       ['waiting', 'checked_in', 'in_service'].includes(a.status)
     );
-    const pix = today.filter(
+    const inService = todayList.filter((a) => a.status === 'in_service');
+    const inQueue = todayList.filter((a) =>
+      ['waiting', 'checked_in'].includes(a.status)
+    );
+    const pix = todayList.filter(
       (a) =>
         a.payment?.status === 'pending' || a.status === 'awaiting_payment'
     );
-    const noShow = today.filter((a) => a.status === 'no_show');
+    const noShow = todayList.filter((a) => a.status === 'no_show');
+    const cancelled = todayList.filter((a) => a.status === 'cancelled');
+    const done = todayList.filter(
+      (a) => a.status === 'done' || a.status === 'rated'
+    );
+    const upcoming = todayList.filter((a) =>
+      ['booked', 'paid', 'awaiting_payment'].includes(a.status)
+    );
+    const paidToday = todayList.filter(
+      (a) => a.payment?.status === 'confirmed'
+    );
+    const revenuePaid = paidToday.reduce(
+      (s, a) => s + Number(a.payment?.amount ?? a.price ?? 0),
+      0
+    );
+    const revenuePending = pix.reduce(
+      (s, a) => s + Number(a.payment?.amount ?? a.price ?? 0),
+      0
+    );
+    const closedCount = done.length + paidToday.length;
+    const ticketBase = paidToday.length || done.length;
+    const avgTicket =
+      ticketBase > 0
+        ? revenuePaid / Math.max(paidToday.length, 1)
+        : 0;
+
     const ratings = ratingsSummary();
     const shop = loadBarbershop().shop;
     const ops = loadShopOps();
+    const growth = growthDashboard();
+
+    // niche universal labels
+    let nicheId = process.env.NICHE_ID || 'generic';
+    try {
+      const bizPath = path.join(process.cwd(), 'config', 'business.json');
+      if (fs.existsSync(bizPath)) {
+        const biz = JSON.parse(fs.readFileSync(bizPath, 'utf8'));
+        if (biz.nicheId) nicheId = biz.nicheId;
+      }
+    } catch {
+      /* ignore */
+    }
+    const labels = resolveNicheLabels(nicheId);
+    const todayISO = new Date().toISOString().slice(0, 10);
+
+    const dayReport = {
+      date: todayISO,
+      total: todayList.length,
+      upcoming: upcoming.length,
+      inQueue: inQueue.length,
+      inService: inService.length,
+      waiting: waiting.length, // queue + in service (compat)
+      completed: done.length,
+      noShow: noShow.length,
+      cancelled: cancelled.length,
+      payPending: pix.length,
+      revenuePaid: Math.round(revenuePaid * 100) / 100,
+      revenuePending: Math.round(revenuePending * 100) / 100,
+      avgTicket: Math.round(avgTicket * 100) / 100,
+      ticketsOpen: openTicketsCount(),
+    };
+
     json(res, 200, {
       shop: {
         name: shop.name,
@@ -572,19 +827,34 @@ async function handleApi(
         pixName: shop.pixName,
       },
       ops,
+      labels,
+      nicheId,
       health: botHealthHint(),
+      growth: {
+        funnel: growth.funnel,
+        openCount: growth.openCount,
+      },
+      // relatório do dia (universal)
+      dayReport,
+      // compat antigas
       kpis: {
-        today: today.length,
+        today: todayList.length,
         waiting: waiting.length,
         pixPending: pix.length,
         noShow: noShow.length,
-        ticketsOpen: openTicketsCount(),
+        growthOpen: growth.openCount,
+        ticketsOpen: dayReport.ticketsOpen,
         ratingAvg: ratings.avg,
         ratingCount: ratings.count,
-        done: today.filter((a) => a.status === 'done' || a.status === 'rated')
-          .length,
+        done: done.length,
+        revenuePaid: dayReport.revenuePaid,
+        revenuePending: dayReport.revenuePending,
+        avgTicket: dayReport.avgTicket,
+        inQueue: dayReport.inQueue,
+        inService: dayReport.inService,
+        completed: dayReport.completed,
       },
-      today,
+      today: todayList,
       waiting,
       pix,
       ratings,
@@ -615,24 +885,35 @@ async function handleApi(
     }
 
     if (action === 'arrived' || action === 'checkin') {
-      json(res, 200, { booking: updateAppointment(id, { status: 'waiting' }) });
+      const booking = updateAppointment(id, { status: 'waiting' });
+      notifyChange('appointments', 'panel', { id, action });
+      json(res, 200, { booking });
       return;
     }
     if (action === 'serve' || action === 'start') {
-      json(res, 200, {
-        booking: updateAppointment(id, { status: 'in_service' }),
-      });
+      const booking = updateAppointment(id, { status: 'in_service' });
+      notifyChange('appointments', 'panel', { id, action });
+      json(res, 200, { booking });
       return;
     }
     if (action === 'done' || action === 'finish') {
-      const u = updateAppointment(id, { status: 'done' });
-      if (u) {
+      // evita reenviar "finalizado" se clicar 2x no painel
+      const alreadyDone = a.status === 'done' || a.status === 'rated';
+      const alreadyNotified = Boolean(a.notes && a.notes.includes('[done_notified]'));
+      const u = updateAppointment(id, {
+        status: 'done',
+        notes: alreadyNotified
+          ? a.notes
+          : `${(a.notes || '').trim()} [done_notified]`.trim(),
+      });
+      if (u && !alreadyDone && !alreadyNotified) {
         const first = (u.clientName || '').split(' ')[0];
         enqueueOwnerMessage(
           u.chatId,
           `Pronto, *${first}*! ✅\n\nSeu atendimento acabou de ser finalizado.\nSe puder, me manda uma notinha de *1 a 5* (ou digita *avaliar*) — ajuda demais 🙏`
         );
       }
+      notifyChange('appointments', 'panel', { id, action });
       json(res, 200, { booking: u });
       return;
     }
@@ -645,6 +926,7 @@ async function handleApi(
           `Oi, *${first}* 😊\n\nA gente registrou *falta* no horário das *${u.time}*.\nQuer remarcar? Manda *remarcar* — ou *0* pro menu.`
         );
       }
+      notifyChange('appointments', 'panel', { id, action });
       json(res, 200, { booking: u });
       return;
     }
@@ -654,32 +936,40 @@ async function handleApi(
         a.chatId,
         `❌ *${a.clientName}*, seu horário de *${a.date} ${a.time}* foi cancelado.\n\nDigite *1* para remarcar.`
       );
+      notifyChange('appointments', 'panel', { id, action });
       json(res, 200, { ok: true });
       return;
     }
     if (action === 'paid' || action === 'confirm_payment') {
+      const alreadyPaid = a.payment?.status === 'confirmed';
+      const alreadyNotified = Boolean(a.notes && a.notes.includes('[paid_notified]'));
       confirmPayment(id, 'owner');
       const u = loadAppointments().find((x) => x.id === id);
-      if (u) {
+      if (u && !alreadyPaid && !alreadyNotified) {
+        updateAppointment(id, {
+          notes: `${(u.notes || '').trim()} [paid_notified]`.trim(),
+        });
         const first = (u.clientName || '').split(' ')[0];
         enqueueOwnerMessage(
           u.chatId,
           `Pagamento confirmado, *${first}*! ✅\nValor: R$ ${u.price.toFixed(2).replace('.', ',')}\n\nValeu demais 🙏`
         );
       }
+      notifyChange('appointments', 'panel', { id, action });
       json(res, 200, { booking: u });
       return;
     }
     if (action === 'status' && body.status) {
-      json(res, 200, {
-        booking: updateAppointment(id, {
-          status: body.status as VisitStatus,
-        }),
+      const booking = updateAppointment(id, {
+        status: body.status as VisitStatus,
       });
+      notifyChange('appointments', 'panel', { id, action, status: body.status });
+      json(res, 200, { booking });
       return;
     }
     if (action === 'msg' && body.text) {
       enqueueOwnerMessage(a.chatId, String(body.text));
+      notifyChange('outbox', 'panel', { id, action });
       json(res, 200, { ok: true, queued: true });
       return;
     }
@@ -707,6 +997,7 @@ async function handleApi(
     if (body.reply && t.chatId) {
       enqueueOwnerMessage(t.chatId, String(body.reply));
     }
+    notifyChange('tickets', 'panel', { id: t.id, status: t.status });
     json(res, 200, { ticket: t });
     return;
   }
@@ -728,6 +1019,20 @@ async function handleApi(
 
   if (pathname === '/api/shop' && req.method === 'GET') {
     json(res, 200, loadBarbershop());
+    return;
+  }
+
+  // salva loja completa (equipe + horários por dia)
+  if (pathname === '/api/shop' && req.method === 'POST') {
+    const body = JSON.parse((await readBody(req)) || '{}');
+    const cur = loadBarbershop();
+    if (body.shop) cur.shop = { ...cur.shop, ...body.shop };
+    if (Array.isArray(body.services)) cur.services = body.services;
+    if (Array.isArray(body.barbers)) cur.barbers = body.barbers;
+    saveBarbershop(cur);
+    notifyChange('shop', 'panel', { action: 'save_shop' });
+    notifyChange('appointments', 'panel', { action: 'shop_hours_changed' });
+    json(res, 200, { ok: true, config: cur });
     return;
   }
 
@@ -768,10 +1073,12 @@ export function startPanelServer(): http.Server {
     }
   });
 
+  startLiveWatchers();
   server.listen(PORT, () => {
     console.log(`\n  ════════════════════════════════════════`);
     console.log(`  🖥️  Painel DONO     → http://localhost:${PORT}/`);
     console.log(`  🛠️  Painel ADMIN    → http://localhost:${PORT}/admin`);
+    console.log(`  🔴  Tempo real SSE  → /api/events`);
     console.log(`  🔑  Owner token     → ${PANEL_TOKEN}`);
     console.log(`  🔑  Admin token     → ${ADMIN_TOKEN}`);
     console.log(`  ════════════════════════════════════════\n`);

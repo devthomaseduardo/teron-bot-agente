@@ -12,6 +12,7 @@ const TITLES = {
   health: ['Saúde', 'Bot, logs e nichos'],
   qr: ['WhatsApp / QR', 'Conexão remota do tenant'],
   payments: ['Pagamentos', 'Mercado Pago, Nubank PIX e maquininha'],
+  growth: ['Growth', 'Motor de oportunidades locais'],
 };
 
 const state = { data: null, view: 'overview' };

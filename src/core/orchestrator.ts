@@ -29,18 +29,43 @@ export async function processMessage(
   sessionStore.touchUser(chatId, text);
   const session = sessionStore.get(chatId);
 
-  // ── Barbearia (prioridade se nicho ou fluxo ativo) ──
-  if (
+  // ── Barbearia: prioridade máxima (modal + fluxos) ──
+  // Se o nicho for barbershop OU já estiver em booking, NUNCA cai em IA genérica sem tentar o fluxo.
+  const forceBarbershop =
     config.nicheId === 'barbershop' ||
     session.topic === 'barbearia' ||
-    (session.profile.booking_step &&
-      session.profile.booking_step !== 'idle' &&
-      session.profile.booking_step !== 'done')
-  ) {
-    const bb = await runBarbershopFlow(chatId, text);
-    if (bb?.handled && bb.text) {
-      sessionStore.touchBot(chatId, bb.text);
-      return { text: bb.text, source: bb.source, rich: bb.rich };
+    Boolean(
+      session.profile.booking_step &&
+        session.profile.booking_step !== 'idle' &&
+        session.profile.booking_step !== 'done'
+    );
+
+  if (forceBarbershop) {
+    try {
+      const bb = await runBarbershopFlow(chatId, text);
+      if (bb?.handled) {
+        const outText =
+          (bb.text && bb.text.trim()) ||
+          bb.rich?.intro ||
+          bb.rich?.text ||
+          config.fallbackMessage;
+        sessionStore.touchBot(chatId, outText);
+        return {
+          text: outText,
+          source: bb.source || 'barbershop',
+          rich: bb.rich || { text: outText, keepTogether: true },
+        };
+      }
+    } catch (err) {
+      // se o fluxo quebrar, ainda manda menu modal em vez de fallback IA
+      try {
+        const { tplMenu } = await import('../barbershop/templates.js');
+        const menu = tplMenu();
+        sessionStore.touchBot(chatId, menu.text);
+        return { text: menu.text, source: 'barbershop+recovery', rich: menu };
+      } catch {
+        /* segue abaixo */
+      }
     }
   }
 
