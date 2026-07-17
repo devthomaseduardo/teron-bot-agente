@@ -1,0 +1,65 @@
+services:
+  agente-barbearia:
+    build: .
+    container_name: agente-barbearia
+    restart: unless-stopped
+    # Chromium em container precisa de shm maior
+    shm_size: "1gb"
+    environment:
+      - ENGINE_MODE=${ENGINE_MODE:-hybrid}
+      - NICHE_ID=barbershop
+      - SESSION_NAME=${SESSION_NAME:-assistente}
+      - DEVICE_NAME=Barbearia Navalha Fina
+      - ASSISTANT_NAME=${ASSISTANT_NAME:-Alex}
+      - COMPANY_NAME=Barbearia Navalha Fina
+      - CHROME_PATH=/usr/bin/chromium
+      - AI_SELECTED=${AI_SELECTED:-GEMINI}
+      - GEMINI_KEY=${GEMINI_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash}
+      - OPENAI_KEY=${OPENAI_KEY:-}
+      - DIRECT_API_KEY=${DIRECT_API_KEY:-}
+      - DIRECT_BASE_URL=${DIRECT_BASE_URL:-}
+      - DIRECT_MODEL=${DIRECT_MODEL:-}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - LEAD_CAPTURE=true
+      - NO_SHOW_GRACE_MIN=${NO_SHOW_GRACE_MIN:-25}
+      - UNPAID_REMIND_HOURS=${UNPAID_REMIND_HOURS:-12}
+    volumes:
+      # sessão WhatsApp (QR / login persistente)
+      - ./tokens:/app/tokens
+      # mensagens, leads, agendamentos, logs
+      - ./data:/app/data
+      # config editável sem rebuild
+      - ./config:/app/config
+      # fotos da marca
+      - ./assets:/app/assets:ro
+      # .env opcional
+      - ./.env:/app/.env:ro
+    # Para escanear QR no terminal do host:
+    # docker compose logs -f agente-barbearia
+    stdin_open: true
+    tty: true
+    # Se usar Ollama no host (Linux):
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Painel web do dono (mesmo data/ do bot)
+  painel-dono:
+    build: .
+    container_name: painel-dono
+    restart: unless-stopped
+    command: ["node", "dist/panel/server.cjs"]
+    environment:
+      - PANEL_PORT=8787
+      - PANEL_TOKEN=${PANEL_TOKEN:-navalha-dev}
+      - NICHE_ID=barbershop
+    ports:
+      - "${PANEL_PORT:-8787}:8787"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+      - ./panel/public:/app/panel/public:ro
+      - ./.env:/app/.env:ro
+    depends_on:
+      - agente-barbearia

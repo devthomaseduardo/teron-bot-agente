@@ -1,0 +1,170 @@
+{
+  "shop": {
+    "name": "Barbearia Navalha Fina",
+    "address": "Rua das Tesouras, 120 — Centro",
+    "phone": "(11) 97707-0209",
+    "timezone": "America/Sao_Paulo",
+    "greeting": "Bem-vindo à Barbearia Navalha Fina! ✂️",
+    "slotMinutes": 30,
+    "daysOpen": [1, 2, 3, 4, 5, 6],
+    "notes": "Seg a sáb · Dom fechado · Chegue 5 min antes",
+    "pixKey": "barbearia@navalhafina.com.br",
+    "pixName": "Barbearia Navalha Fina",
+    "waitBufferMin": 5,
+    "lat": -23.55052,
+    "lng": -46.633308
+  },
+  "services": [
+    {
+      "id": "corte",
+      "name": "Corte masculino",
+      "price": 45,
+      "durationMin": 30,
+      "keywords": ["corte", "cabelo", "cortar"]
+    },
+    {
+      "id": "barba",
+      "name": "Barba completa",
+      "price": 35,
+      "durationMin": 25,
+      "keywords": ["barba", "fazer a barba"]
+    },
+    {
+      "id": "corte_barba",
+      "name": "Corte + Barba",
+      "price": 70,
+      "durationMin": 50,
+      "keywords": ["combo", "corte e barba", "corte + barba", "completo"]
+    },
+    {
+      "id": "pezinho",
+      "name": "Pezinho / acabamento",
+      "price": 20,
+      "durationMin": 15,
+      "keywords": ["pezinho", "acabamento", "máquina"]
+    },
+    {
+      "id": "pigmentacao",
+      "name": "Pigmentação capilar",
+      "price": 90,
+      "durationMin": 60,
+      "keywords": ["pigmentação", "pigmentacao", "disfarce"]
+    },
+    {
+      "id": "hidratacao",
+      "name": "Hidratação + finalização",
+      "price": 55,
+      "durationMin": 40,
+      "keywords": ["hidratação", "hidratacao", "tratamento"]
+    }
+  ],
+  "barbers": [
+    {
+      "id": "b1",
+      "name": "Carlos",
+      "nickname": "Carlão",
+      "specialty": "corte clássico e social",
+      "schedule": {
+        "1": ["09:00", "18:00"],
+        "2": ["09:00", "18:00"],
+        "3": ["09:00", "18:00"],
+        "4": ["09:00", "18:00"],
+        "5": ["09:00", "18:00"],
+        "6": ["09:00", "14:00"]
+      }
+    },
+    {
+      "id": "b2",
+      "name": "Diego",
+      "nickname": "DG",
+      "specialty": "degradê e fades",
+      "schedule": {
+        "1": ["10:00", "19:00"],
+        "2": ["10:00", "19:00"],
+        "3": ["10:00", "19:00"],
+        "4": ["10:00", "19:00"],
+        "5": ["10:00", "20:00"],
+        "6": ["10:00", "16:00"]
+      }
+    },
+    {
+      "id": "b3",
+      "name": "Rafael",
+      "nickname": "Rafa",
+      "specialty": "barba navalha e bigode",
+      "schedule": {
+        "1": ["12:00", "21:00"],
+        "2": ["12:00", "21:00"],
+        "3": ["12:00", "21:00"],
+        "4": ["12:00", "21:00"],
+        "5": ["12:00", "21:00"],
+        "6": ["11:00", "17:00"]
+      }
+    },
+    {
+      "id": "b4",
+      "name": "Lucas",
+      "nickname": "Lu",
+      "specialty": "corte infantil e adolescente",
+      "schedule": {
+        "2": ["09:00", "17:00"],
+        "3": ["09:00", "17:00"],
+        "4": ["09:00", "17:00"],
+        "5": ["09:00", "17:00"],
+        "6": ["09:00", "15:00"]
+      }
+    },
+    {
+      "id": "b5",
+      "name": "Marcos",
+      "nickname": "Marcão",
+      "specialty": "pigmentação e disfarce",
+      "schedule": {
+        "1": ["08:00", "16:00"],
+        "2": ["08:00", "16:00"],
+        "3": ["08:00", "16:00"],
+        "4": ["08:00", "16:00"],
+        "5": ["08:00", "16:00"]
+      }
+    },
+    {
+      "id": "b6",
+      "name": "Bruno",
+      "nickname": "Brunner",
+      "specialty": "corte moderno e texturizado",
+      "schedule": {
+        "1": ["13:00", "21:00"],
+        "2": ["13:00", "21:00"],
+        "3": ["13:00", "21:00"],
+        "5": ["13:00", "22:00"],
+        "6": ["10:00", "18:00"]
+      }
+    },
+    {
+      "id": "b7",
+      "name": "Felipe",
+      "nickname": "Lipe",
+      "specialty": "combo corte+barba e finalização",
+      "schedule": {
+        "1": ["09:30", "18:30"],
+        "2": ["09:30", "18:30"],
+        "4": ["09:30", "18:30"],
+        "5": ["09:30", "19:30"],
+        "6": ["09:00", "15:00"]
+      }
+    },
+    {
+      "id": "b8",
+      "name": "André",
+      "nickname": "Dre",
+      "specialty": "hidratação e design de sobrancelha",
+      "schedule": {
+        "2": ["11:00", "20:00"],
+        "3": ["11:00", "20:00"],
+        "4": ["11:00", "20:00"],
+        "5": ["11:00", "20:00"],
+        "6": ["10:00", "16:00"]
+      }
+    }
+  ]
+}

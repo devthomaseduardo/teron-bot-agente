@@ -1,0 +1,10 @@
+node_modules
+dist
+data/bot.log
+data/sessions.json
+data/messages.jsonl
+.git
+.grok
+tokens
+*.md
+.env.backup

@@ -1,16 +1,48 @@
 {
-  "name": "eduaro-zap-gpt",
-  "version": "1.0.0",
-  "description": "",
+  "name": "agente-comercial-whatsapp",
+  "version": "2.0.0",
+  "description": "Assistente comercial WhatsApp multi-nicho: script + IA, anti-ban, pronto para venda",
   "main": "src/index.ts",
-  "scripts": {
-    "config": "node ./setup.js",
-    "dev": "tsx watch src/index.ts",
-    "build": "tsup src",
-    "start": "npm run build && npx pm2 start dist/index.cjs --name eduardo-zap-gpt --no-daemon",
-    "stop": "npx pm2 delete zap-gpt"
+  "bin": {
+    "agente": "./dist/cli.cjs"
   },
-  "keywords": [],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "dev:watch": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts src/cli.ts src/panel/server.ts --format cjs --outDir dist",
+    "start": "npm run build && node dist/index.cjs",
+    "terminal": "tsx src/index.ts",
+    "cli": "tsx src/cli.ts",
+    "config": "tsx src/cli.ts config",
+    "setup": "tsx src/cli.ts config",
+    "connections": "tsx src/cli.ts connections",
+    "models": "tsx src/cli.ts models",
+    "analyze": "tsx src/cli.ts analyze",
+    "stats": "tsx src/cli.ts stats",
+    "leads": "tsx src/cli.ts leads",
+    "doctor": "tsx src/cli.ts doctor",
+    "start:pm2": "npm run build && npx pm2 start dist/index.cjs --name agente-comercial",
+    "stop": "npx pm2 delete agente-comercial",
+    "test:script": "tsx src/scripts/smoke-script.ts",
+    "test:barbershop": "tsx src/scripts/test-barbershop.ts",
+    "owner": "tsx src/cli.ts owner",
+    "dono": "tsx src/cli.ts owner",
+    "panel": "tsx src/panel/server.ts",
+    "painel": "tsx src/panel/server.ts",
+    "admin": "tsx src/panel/server.ts",
+    "docker:up": "docker compose up -d --build",
+    "docker:logs": "docker compose logs -f agente-barbearia",
+    "docker:down": "docker compose down"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "assistente",
+    "agente",
+    "crm",
+    "gemini",
+    "wppconnect"
+  ],
   "author": {
     "name": "Thomas Eduardo",
     "email": "developer.thomas@outlook.com.br"
@@ -22,14 +54,14 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.2.1",
-    "@wppconnect-team/wppconnect": "1.30.2",
+    "@wppconnect-team/wppconnect": "^2.2.3",
     "axios": "^1.6.5",
     "csv-stringify": "^6.4.5",
     "dotenv": "^16.3.2",
     "inquirer": "^9.2.15",
-    "openai": "^4.24.2",
     "lodash": "^4.17.21",
-    "moment": "^2.29.4"
+    "moment": "^2.29.4",
+    "openai": "^4.24.2"
   },
   "devDependencies": {
     "@types/node": "^20.11.8",
@@ -46,5 +78,8 @@
     "tsup": "^8.0.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
+  },
+  "allowScripts": {
+    "puppeteer@24.43.1": true
   }
 }

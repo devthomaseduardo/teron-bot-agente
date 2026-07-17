@@ -1,5 +1,17 @@
-node_modules
-tokens
+node_modules/
+tokens/
+dist/
 .env
 .env.backup
-dist
+*.log
+
+# runtime / cliente
+data/*
+!data/.gitkeep
+tenants/
+config/connections.json
+
+# QR e sessão WhatsApp
+data/qr*.txt
+data/qr.png
+data/wa-status.json

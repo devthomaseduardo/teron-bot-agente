@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel · Navalha Fina</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">NF</div>
+        <div class="brand-text">
+          <strong id="shopName">Navalha Fina</strong>
+          <span>Painel do proprietário</span>
+        </div>
+      </div>
+
+      <nav class="nav-list" id="nav">
+        <div class="nav-section">Operação</div>
+        <button class="nav-item active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-item" data-view="agenda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Agenda
+        </button>
+        <button class="nav-item" data-view="fila">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Fila
+          <span class="badge-count" id="navFila" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-view="pix">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          Pagamentos
+          <span class="badge-count" id="navPix" style="display:none">0</span>
+        </button>
+
+        <div class="nav-section">Clientes</div>
+        <button class="nav-item" data-view="tickets">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Reclamações
+          <span class="badge-count" id="navTickets" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-view="ratings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"/></svg>
+          Avaliações
+        </button>
+
+        <div class="nav-section">Sistema</div>
+        <button class="nav-item" data-view="whatsapp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          WhatsApp / QR
+        </button>
+        <button class="nav-item" data-view="pagamentos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          Formas de pagar
+        </button>
+        <button class="nav-item" data-view="loja">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Configurações
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <label class="switch">
+          <span>Loja aberta</span>
+          <input type="checkbox" id="shopOpen" checked />
+        </label>
+        <button type="button" id="btnRefresh" class="btn btn-ghost btn-block">Atualizar dados</button>
+        <a href="/admin" class="btn btn-ghost btn-block">Admin plataforma</a>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div>
+          <h1 id="viewTitle">Dashboard</h1>
+          <p id="viewDesc">Visão geral do dia</p>
+        </div>
+        <div class="topbar-right">
+          <span class="status-pill" id="clock">—</span>
+          <span class="status-pill online" id="apiStatus"><span class="dot"></span> Online</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- SETUP self-service -->
+        <div id="setupBanner" class="card mb-3" style="display:none;border-color:var(--primary-border)">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+              <div>
+                <div style="font-weight:700;font-size:15px;margin-bottom:4px">Configure sua loja</div>
+                <div class="muted" style="font-size:13px">Você faz sozinho — sem depender do suporte. Complete os passos abaixo.</div>
+                <div id="setupSteps" class="mt-3" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+              </div>
+              <div style="text-align:right">
+                <div class="muted-sm">Progresso</div>
+                <div id="setupPercent" style="font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--primary)">0%</div>
+                <button type="button" class="btn btn-primary btn-sm mt-2" data-view-jump="loja">Continuar setup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="view active">
+          <div class="kpi-grid" id="kpis"></div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h3>Agenda de hoje</h3>
+                <span class="meta" id="todayCount">0 horários</span>
+              </div>
+              <div class="card-body tight">
+                <div id="listToday" class="stack"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Precisa de atenção</h3>
+                <span class="meta">PIX · fila · faltas</span>
+              </div>
+              <div class="card-body tight">
+                <div id="listAttention" class="stack"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-agenda" class="view">
+          <div class="card">
+            <div class="card-header">
+              <h3>Agenda</h3>
+              <input type="date" id="dayPicker" class="input" style="width:auto;height:32px" />
+            </div>
+            <div class="card-body tight">
+              <div id="listAgenda" class="stack"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-fila" class="view">
+          <div class="card">
+            <div class="card-header"><h3>Fila virtual</h3></div>
+            <div class="card-body tight"><div id="listFila" class="stack"></div></div>
+          </div>
+        </section>
+
+        <section id="view-pix" class="view">
+          <div class="card">
+            <div class="card-header"><h3>Pagamentos pendentes</h3></div>
+            <div class="card-body tight"><div id="listPix" class="stack"></div></div>
+          </div>
+        </section>
+
+        <section id="view-tickets" class="view">
+          <div class="card">
+            <div class="card-header"><h3>Reclamações</h3></div>
+            <div class="card-body tight"><div id="listTickets" class="stack"></div></div>
+          </div>
+        </section>
+
+        <section id="view-ratings" class="view">
+          <div class="card">
+            <div class="card-header"><h3>Avaliações</h3></div>
+            <div class="card-body">
+              <div id="ratingsBox"></div>
+              <div id="listRatings" class="stack mt-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-whatsapp" class="view">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h3>Conexão WhatsApp</h3>
+                <button type="button" id="btnRefreshQr" class="btn btn-primary btn-sm">Atualizar QR</button>
+              </div>
+              <div class="card-body">
+                <div id="waStatusBox" class="mb-3"></div>
+                <div id="qrBox" class="qr-panel">
+                  <div class="empty">Carregando status…</div>
+                </div>
+                <p class="muted-sm mt-3 mb-0">
+                  No celular: WhatsApp → <strong>Aparelhos conectados</strong> → Conectar um aparelho.
+                </p>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Instalação online</h3></div>
+              <div class="card-body">
+                <ol class="muted" style="margin:0;padding-left:18px;line-height:1.8">
+                  <li>Bot rodando no servidor</li>
+                  <li>Abra esta tela no computador</li>
+                  <li>Escaneie o QR com o WhatsApp da loja</li>
+                  <li>Teste com “oi” de outro número</li>
+                </ol>
+                <div class="mt-4">
+                  <div class="stat"><span>Estado</span><span id="waStatePill" class="chip">—</span></div>
+                  <div class="stat"><span>Sessão</span><span id="waSession" class="mono">—</span></div>
+                  <div class="stat"><span>Atualizado</span><span id="waUpdated" class="mono">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-pagamentos" class="view">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h3>1) PIX (Nubank, Inter…)</h3>
+              <span class="meta" id="ownerPaySummary">—</span>
+            </div>
+            <div class="card-body">
+              <p class="muted" style="margin-top:0;line-height:1.6">
+                Cadastre a chave da <strong>sua</strong> conta. O bot manda o copia-e-cola no WhatsApp.
+              </p>
+              <div class="form-grid">
+                <label class="field">Banco da chave
+                  <select id="ownerPixBank">
+                    <option value="nubank">Nubank</option>
+                    <option value="inter">Inter</option>
+                    <option value="itau">Itaú</option>
+                    <option value="bradesco">Bradesco</option>
+                    <option value="bb">Banco do Brasil</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </label>
+                <label class="field">Nome no PIX
+                  <input id="ownerPixName" type="text" />
+                </label>
+                <label class="field span-2">Chave PIX
+                  <input id="ownerPixKey" type="text" placeholder="CPF, e-mail, telefone ou aleatória" />
+                </label>
+                <label class="field">Provedor principal
+                  <select id="ownerPayActive">
+                    <option value="pix_key">PIX chave</option>
+                    <option value="mercado_pago">Mercado Pago</option>
+                    <option value="manual">Só maquininha/dinheiro</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="card mb-3">
+            <div class="card-header">
+              <h3>2) Mercado Pago (opcional)</h3>
+              <span class="chip blue">PIX + cartão online</span>
+            </div>
+            <div class="card-body">
+              <p class="muted" style="margin-top:0;line-height:1.55;font-size:13px">
+                Cole o Access Token da <em>sua</em> conta Mercado Pago.
+                O cliente paga PIX ou cartão no link — confirma sozinho.
+              </p>
+              <div class="form-grid">
+                <label class="field span-2">Access Token
+                  <input id="ownerMpToken" type="password" placeholder="APP_USR-… ou TEST-…" autocomplete="off" />
+                </label>
+                <label class="field">
+                  <span style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                    <input type="checkbox" id="ownerMpEnabled" /> Ativar Mercado Pago
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="gap-2">
+            <button type="button" id="btnSaveOwnerPay" class="btn btn-primary btn-lg">Salvar pagamentos</button>
+            <button type="button" id="btnOwnerTestPix" class="btn btn-lg">Testar PIX R$1</button>
+          </div>
+          <div id="ownerPayTest" class="muted-sm mt-3"></div>
+        </section>
+
+        <section id="view-loja" class="view">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h3>Dados da loja</h3>
+              <button type="button" id="btnSaveShopOwner" class="btn btn-primary btn-sm">Salvar loja</button>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <label class="field">Nome da loja<input id="oShopName" type="text" /></label>
+                <label class="field">Telefone<input id="oShopPhone" type="text" /></label>
+                <label class="field span-2">Endereço<input id="oShopAddress" type="text" /></label>
+                <label class="field">Latitude<input id="oShopLat" type="number" step="any" /></label>
+                <label class="field">Longitude<input id="oShopLng" type="number" step="any" /></label>
+              </div>
+              <div id="shopInfo" class="muted mt-3" style="line-height:1.7;display:none"></div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><h3>Serviços (um por linha)</h3></div>
+              <div class="card-body">
+                <p class="muted-sm" style="margin-top:0">Formato: <code>Nome | preço | minutos</code></p>
+                <textarea id="oServices" rows="8" style="width:100%;font-family:var(--mono);font-size:12px;padding:12px;border:1px solid var(--border);border-radius:8px"></textarea>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Equipe (um por linha)</h3></div>
+              <div class="card-body">
+                <p class="muted-sm" style="margin-top:0">Formato: <code>Nome | apelido | especialidade</code></p>
+                <textarea id="oBarbers" rows="8" style="width:100%;font-family:var(--mono);font-size:12px;padding:12px;border:1px solid var(--border);border-radius:8px"></textarea>
+                <div class="stat mt-3"><span>Bot</span><span id="botHint" class="mono">—</span></div>
+                <div class="stat"><span>Chamados</span><span id="ticketsHint">—</span></div>
+                <div class="stat"><span>Nota média</span><span id="ratingHint">—</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

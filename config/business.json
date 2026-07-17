@@ -1,0 +1,31 @@
+{
+  "mode": "hybrid",
+  "nicheId": "generic",
+  "sessionName": "assistente",
+  "leadCapture": true,
+  "fallbackMessage": "Não entendi 😅 Digite *menu* para ver opções da Barbearia Navalha Fina, ou *agendar* para marcar horário.",
+  "antiBan": {
+    "minReplyDelayMs": 600,
+    "maxReplyDelayMs": 1400,
+    "messageBufferMs": 1500,
+    "typingMsPerChar": 16,
+    "typingMaxMs": 2200,
+    "minGapBetweenBubblesMs": 350,
+    "maxGapBetweenBubblesMs": 800,
+    "maxMessagesPerMinute": 20,
+    "maxMessagesPerChatPerHour": 50,
+    "maxUniqueChatsPerHour": 80,
+    "markAsRead": true,
+    "ignoreGroups": true,
+    "ignoreStatus": true
+  },
+  "niche": {
+    "persona": {
+      "name": "Alex",
+      "role": "assistant",
+      "tone": "amigavel",
+      "companyName": "Barbearia Navalha Fina",
+      "companyDescription": "8 barbeiros, cortes, barba e combos. Agende pelo WhatsApp."
+    }
+  }
+}
