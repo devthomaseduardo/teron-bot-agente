@@ -13,16 +13,20 @@ async function testTeron() {
   const steps = [
     'oi',
     '1', // Quero um orçamento
-    'Matheus - Teron Studio', // Nome e empresa
-    'matheus@teron.com - São Paulo', // Email e cidade
-    '3', // Seleciona opção 3 do Modal List: Automação WhatsApp & OS
-    'Precisamos integrar o bot de WhatsApp com nosso sistema de OS', // Detalhes do projeto
-    '1', // Seleciona opção 1 do Modal List: Até 15 dias (Urgente)
+    'Matheus', // 1. Primeiro Nome
+    'Teron Studio', // 2. Nome da Empresa
+    'matheus@teron.com', // 3. E-mail Corporativo
+    'São Paulo, SP', // 4. Cidade / Estado
+    'https://teronstudio.com.br', // 5. Website / Instagram
+    '3', // 6. Modal List: Automação WhatsApp & OS
+    'Precisamos integrar o bot de WhatsApp com nosso sistema de OS', // 7. Detalhes / Briefing
+    '1', // 8. Modal List: Até 15 dias (Urgente) -> Gera Proposta automaticamente
+    'status', // Gatilho de acompanhamento pós-proposta (OTP, pagamento 50%)
     'Ok', // Confirmação pós-fluxo
     'Olá', // Nova saudação
   ];
 
-  console.log('🤖 === TESTE DO FLUXO TERON B2B ===\n');
+  console.log('🤖 === TESTE DO FLUXO TERON B2B (UMA PERGUNTA POR VEZ) ===\n');
 
   for (const input of steps) {
     console.log(`👤 ${input}`);
