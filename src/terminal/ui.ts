@@ -292,11 +292,13 @@ export class TerminalUI {
 
     // QR se necessário
     if (this.qrLines.length && this.status === 'qr') {
-      lines.push(this.row(width, paint(c.yellow + c.bold, ' QR CODE (apenas se necessário) ')));
-      // QR ASCII costuma ser largo — mostra centralizado/truncado
-      const maxQr = Math.min(this.qrLines.length, Math.max(8, height - 18));
-      for (let i = 0; i < maxQr; i++) {
+      lines.push(this.row(width, paint(c.yellow + c.bold, ' QR CODE — Abasteça no Painel ou link se o terminal for pequeno ')));
+      const maxQr = height > 35 ? this.qrLines.length : Math.min(this.qrLines.length, Math.max(15, height - 12));
+      for (let i = 0; i < Math.min(this.qrLines.length, maxQr); i++) {
         lines.push(paint(c.white, this.qrLines[i]));
+      }
+      if (maxQr < this.qrLines.length) {
+        lines.push(paint(c.yellow, ' ⚠️  Terminal pequeno (QR cortado no terminal) — Abra http://localhost:8787/ ou o link do QR '));
       }
       lines.push(this.borderLine(width, 'mid'));
     }

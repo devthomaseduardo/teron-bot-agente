@@ -29,13 +29,41 @@ export async function processMessage(
   sessionStore.touchUser(chatId, text);
   const session = sessionStore.get(chatId);
 
-  // ── Barbearia: prioridade máxima (modal + fluxos) ──
-  // Se o nicho for barbershop OU já estiver em booking, NUNCA cai em IA genérica sem tentar o fluxo.
+  // ── Teron B2B: Nicho Teron (modal + formulário de orçamento em 5 etapas) ──
+  const isTeron =
+    config.nicheId === 'teron' ||
+    session.topic === 'teron_b2b' ||
+    Boolean(session.profile.teron_step);
+
+  if (isTeron) {
+    try {
+      const { runTeronFlow } = await import('../teron/teron-flow.js');
+      const teronResult = await runTeronFlow(chatId, text);
+      if (teronResult?.handled) {
+        const outText =
+          (teronResult.text && teronResult.text.trim()) ||
+          teronResult.rich?.intro ||
+          teronResult.rich?.text ||
+          config.fallbackMessage;
+        sessionStore.touchBot(chatId, outText);
+        return {
+          text: outText,
+          source: teronResult.source || 'teron',
+          rich: teronResult.rich || { text: outText, keepTogether: true },
+        };
+      }
+    } catch (err) {
+      /* fallback se o fluxo Teron falhar */
+    }
+  }
+
+  // ── Barbearia: prioridade quando nicheId === 'barbershop' ──
   const forceBarbershop =
     config.nicheId === 'barbershop' ||
-    session.topic === 'barbearia' ||
+    (session.topic === 'barbearia' && config.nicheId !== 'teron') ||
     Boolean(
-      session.profile.booking_step &&
+      config.nicheId === 'barbershop' &&
+        session.profile.booking_step &&
         session.profile.booking_step !== 'idle' &&
         session.profile.booking_step !== 'done'
     );

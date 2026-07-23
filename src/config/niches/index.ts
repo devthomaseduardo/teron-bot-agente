@@ -5,6 +5,7 @@ import { realestateNiche } from './realestate.js';
 import { restaurantNiche } from './restaurant.js';
 import { ecommerceNiche } from './ecommerce.js';
 import { barbershopNiche } from './barbershop.js';
+import { teronNiche } from './teron.js';
 
 const niches: Record<string, NicheTemplate> = {
   generic: genericNiche,
@@ -13,6 +14,7 @@ const niches: Record<string, NicheTemplate> = {
   restaurant: restaurantNiche,
   ecommerce: ecommerceNiche,
   barbershop: barbershopNiche,
+  teron: teronNiche,
 };
 
 export function listNiches(): Array<{ id: string; name: string; description: string }> {

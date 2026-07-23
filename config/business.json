@@ -1,9 +1,9 @@
 {
   "mode": "hybrid",
-  "nicheId": "barbershop",
+  "nicheId": "teron",
   "sessionName": "assistente",
   "leadCapture": true,
-  "fallbackMessage": "Não entendi 😅 Digite *menu* para ver opções da Barbearia Navalha Fina, ou *agendar* para marcar horário.",
+  "fallbackMessage": "Não entendi 😅 Digite *menu* para ver opções da Teron OS, ou *atendente* para falar com um consultor.",
   "antiBan": {
     "minReplyDelayMs": 600,
     "maxReplyDelayMs": 1400,
@@ -21,11 +21,11 @@
   },
   "niche": {
     "persona": {
-      "name": "Alex",
-      "role": "assistant",
+      "name": "Teron Bot",
+      "role": "Assistente Comercial",
       "tone": "amigavel",
-      "companyName": "Barbearia Navalha Fina",
-      "companyDescription": "8 barbeiros, cortes, barba e combos. Agende pelo WhatsApp."
+      "companyName": "Teron OS",
+      "companyDescription": "Plataforma de automação comercial, gestão de ordens de serviço, leads e workspace de clientes."
     }
   }
 }

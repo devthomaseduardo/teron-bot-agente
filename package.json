@@ -25,6 +25,7 @@
     "stop": "npx pm2 delete agente-comercial",
     "test:script": "tsx src/scripts/smoke-script.ts",
     "test:barbershop": "tsx src/scripts/test-barbershop.ts",
+    "test:teron": "tsx src/scripts/test-teron.ts",
     "owner": "tsx src/cli.ts owner",
     "dono": "tsx src/cli.ts owner",
     "panel": "tsx src/panel/server.ts",

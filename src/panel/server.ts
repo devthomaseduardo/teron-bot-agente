@@ -8,6 +8,9 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 import {
   loadAppointments,
   loadBarbershop,
@@ -180,6 +183,75 @@ async function handleApi(
   if (req.method === 'OPTIONS') {
     json(res, 204, {});
     return;
+  }
+
+  // ── Teron OS Integration API (Integração com Teron OS / Workspace) ──
+  if (pathname.startsWith('/api/teron') || pathname.startsWith('/api/v1')) {
+    // GET /api/teron/leads ou /api/v1/leads
+    if ((pathname === '/api/teron/leads' || pathname === '/api/v1/leads') && req.method === 'GET') {
+      const { readLeads } = await import('../core/leads.js');
+      const list = readLeads();
+      json(res, 200, { ok: true, count: list.length, leads: list });
+      return;
+    }
+
+    // POST /api/teron/send-message ou /api/v1/send-message
+    if ((pathname === '/api/teron/send-message' || pathname === '/api/v1/send-message') && req.method === 'POST') {
+      const body = JSON.parse((await readBody(req)) || '{}');
+      let target = String(body.chatId || body.to || body.phone || '').trim();
+      const text = String(body.text || body.message || '').trim();
+
+      if (!target || !text) {
+        json(res, 400, {
+          error: 'missing_fields',
+          detail: 'Informe "chatId" (ou "phone") e "text" (ou "message")',
+        });
+        return;
+      }
+
+      if (/^\d{10,15}$/.test(target)) {
+        target = `${target}@c.us`;
+      }
+
+      enqueueOwnerMessage(target, text);
+      json(res, 200, {
+        ok: true,
+        queued: true,
+        target,
+        text,
+        at: new Date().toISOString(),
+      });
+      return;
+    }
+
+    // GET /api/teron/status ou /api/v1/status
+    if ((pathname === '/api/teron/status' || pathname === '/api/v1/status') && req.method === 'GET') {
+      const wa = readWaStatus();
+      const { readLeads } = await import('../core/leads.js');
+      json(res, 200, {
+        ok: true,
+        system: 'Teron Bot Agente API',
+        waState: wa.state,
+        detail: wa.detail,
+        session: wa.session,
+        leadsCaptured: readLeads().length,
+        updatedAt: wa.updatedAt,
+      });
+      return;
+    }
+
+    // POST /api/teron/webhook-config
+    if (pathname === '/api/teron/webhook-config' && req.method === 'POST') {
+      const body = JSON.parse((await readBody(req)) || '{}');
+      const webhookUrl = String(body.url || body.webhookUrl || '').trim();
+      process.env.TERON_OS_WEBHOOK_URL = webhookUrl;
+      json(res, 200, {
+        ok: true,
+        webhookUrl,
+        message: 'URL do Webhook Teron OS configurada com sucesso',
+      });
+      return;
+    }
   }
 
   // ── Super-admin ──────────────────────────────────────────
