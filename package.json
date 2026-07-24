@@ -1,7 +1,7 @@
 {
-  "name": "agente-comercial-whatsapp",
-  "version": "2.0.0",
-  "description": "Assistente comercial WhatsApp multi-nicho: script + IA, anti-ban, pronto para venda",
+  "name": "teron-bot-agente",
+  "version": "2.1.0",
+  "description": "Assistente comercial WhatsApp multi-nicho (barbearia, advogados, clínica, TERON OS): script + IA, anti-ban, painel, pronto para venda",
   "main": "src/index.ts",
   "bin": {
     "agente": "./dist/cli.cjs"
@@ -26,6 +26,7 @@
     "test:script": "tsx src/scripts/smoke-script.ts",
     "test:barbershop": "tsx src/scripts/test-barbershop.ts",
     "test:teron": "tsx src/scripts/test-teron.ts",
+    "test:legal": "tsx src/scripts/test-legal.ts",
     "owner": "tsx src/cli.ts owner",
     "dono": "tsx src/cli.ts owner",
     "panel": "tsx src/panel/server.ts",
@@ -41,6 +42,8 @@
     "assistente",
     "agente",
     "crm",
+    "barbearia",
+    "advogado",
     "gemini",
     "wppconnect"
   ],

@@ -1,42 +1,44 @@
 import type { NicheTemplate } from '../types.js';
 
-/** Barbearia fictícia — agendamento com 8 barbeiros */
+/** Barbearia — white-label: nome vem do .env do cliente */
 export const barbershopNiche: NicheTemplate = {
   id: 'barbershop',
-  name: 'Barbearia Navalha Fina',
+  name: 'Barbearia',
   description:
-    'Agendamento, preços, horários e confirmação com 8 barbeiros e escalas diferentes.',
+    'Agendamento completo: serviços, profissionais, horários, PIX, fila e avaliação.',
   persona: {
     name: process.env.ASSISTANT_NAME || 'Alex',
     role: 'assistant',
     tone: 'amigavel',
-    companyName: process.env.COMPANY_NAME || 'Barbearia Navalha Fina',
+    companyName: process.env.COMPANY_NAME || 'Barbearia',
     companyDescription:
-      'Barbearia com 8 profissionais, cortes, barba, pigmentação e hidratação. Agendamento pelo WhatsApp.',
+      process.env.COMPANY_DESCRIPTION ||
+      'Barbearia com profissionais, cortes, barba e agendamento pelo WhatsApp.',
     boundaries: [
-      'Não inventa horários fora da agenda real dos barbeiros',
-      'Não confirma valor diferente da tabela',
-      'Não atende domingo (fechado)',
+      'Não inventa horários fora da agenda real',
+      'Não confirma valor diferente da tabela configurada',
+      'Não promete vaga sem confirmação do fluxo',
     ],
     goals: [
-      'Agendar com serviço, barbeiro, dia e horário',
+      'Agendar com serviço, profissional, dia e horário',
       'Informar preços e duração',
-      'Confirmar reserva',
-      'Passar endereço',
+      'Confirmar reserva e pagamento',
+      'Passar endereço e fila do dia',
     ],
     greeting:
-      'Olá! ✂️ Bem-vindo à Barbearia Navalha Fina. Quer agendar, ver preços ou conhecer os barbeiros?',
-    farewell: 'Valeu! Te esperamos na Navalha Fina 💈',
-    handoffMessage: 'Vou te passar para a recepção humana 👤',
+      process.env.GREETING ||
+      `Olá! Bem-vindo à ${process.env.COMPANY_NAME || 'nossa barbearia'}. Quer agendar, ver preços ou conhecer a equipe?`,
+    farewell: 'Valeu! Te esperamos 💈',
+    handoffMessage: 'Vou te passar para a recepção 👤',
   },
   intents: [
     {
       id: 'greeting',
-      keywords: ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite'],
+      keywords: ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'menu', '0'],
       priority: 10,
       reply: {
         replies: [
-          'Olá! ✂️ Barbearia Navalha Fina. Digite *menu* para opções ou *agendar* para marcar horário.',
+          `Olá! ${process.env.COMPANY_NAME || 'Barbearia'}. Digite *menu* para opções ou *agendar* para marcar horário.`,
         ],
         exclusive: true,
       },
@@ -48,7 +50,7 @@ export const barbershopNiche: NicheTemplate = {
       id: 'parking',
       questions: ['estacionamento', 'onde estacionar'],
       answer:
-        'Tem vagas na rua e um estacionamento rotativo a 50m. Qualquer dúvida, digite *endereço*.',
+        'Se precisar de estacionamento, pergunte na recepção ou digite *endereço* para a localização.',
     },
   ],
   businessHours: undefined,
