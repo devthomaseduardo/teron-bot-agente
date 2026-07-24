@@ -12,6 +12,34 @@ export interface OrchestratorReply {
 }
 
 const LEGAL_IDS = new Set(['legal', 'lawyer', 'advogado', 'advocacia']);
+const CLINIC_IDS = new Set(['clinic', 'clinica', 'dental']);
+const RE_IDS = new Set(['realestate', 'imobiliaria', 'imobiliária']);
+const REST_IDS = new Set(['restaurant', 'restaurante']);
+
+async function tryDedicated(
+  label: string,
+  runner: () => Promise<{ handled?: boolean; text?: string; source?: string; rich?: any } | null>,
+  fallbackMsg: string
+): Promise<OrchestratorReply | null> {
+  try {
+    const result = await runner();
+    if (result?.handled) {
+      const outText =
+        (result.text && result.text.trim()) ||
+        result.rich?.intro ||
+        result.rich?.text ||
+        fallbackMsg;
+      return {
+        text: outText,
+        source: result.source || label,
+        rich: result.rich || { text: outText, keepTogether: true },
+      };
+    }
+  } catch {
+    /* next */
+  }
+  return null;
+}
 
 export async function processMessage(
   config: AppConfig,
@@ -23,60 +51,87 @@ export async function processMessage(
   sessionStore.touchUser(chatId, text);
   const session = sessionStore.get(chatId);
   const niche = String(config.nicheId || '').toLowerCase();
+  const fb = config.fallbackMessage;
 
-  // ── TERON OS (B2B) ──
-  const isTeron =
-    niche === 'teron' ||
-    session.topic === 'teron_b2b' ||
-    Boolean(session.profile.teron_step);
+  // Ordem: fluxos dedicados (confiança + solução) antes de script/IA genérico
 
-  if (isTeron) {
-    try {
-      const { runTeronFlow } = await import('../teron/teron-flow.js');
-      const teronResult = await runTeronFlow(chatId, text);
-      if (teronResult?.handled) {
-        const outText =
-          (teronResult.text && teronResult.text.trim()) ||
-          teronResult.rich?.intro ||
-          teronResult.rich?.text ||
-          config.fallbackMessage;
-        sessionStore.touchBot(chatId, outText);
-        return {
-          text: outText,
-          source: teronResult.source || 'teron',
-          rich: teronResult.rich || { text: outText, keepTogether: true },
-        };
-      }
-    } catch {
-      /* fallback */
+  // ── TERON OS ──
+  if (niche === 'teron' || session.topic === 'teron_b2b' || session.profile.teron_step) {
+    const r = await tryDedicated(
+      'teron',
+      async () => {
+        const { runTeronFlow } = await import('../teron/teron-flow.js');
+        return runTeronFlow(chatId, text);
+      },
+      fb
+    );
+    if (r) {
+      sessionStore.touchBot(chatId, r.text);
+      return r;
     }
   }
 
-  // ── ADVOGADOS / ESCRITÓRIO ──
-  const isLegal =
-    LEGAL_IDS.has(niche) ||
-    session.topic === 'legal' ||
-    Boolean(session.profile.legal_step);
+  // ── LEGAL ──
+  if (LEGAL_IDS.has(niche) || session.topic === 'legal' || session.profile.legal_step) {
+    const r = await tryDedicated(
+      'legal',
+      async () => {
+        const { runLegalFlow } = await import('../legal/legal-flow.js');
+        return runLegalFlow(chatId, text);
+      },
+      fb
+    );
+    if (r) {
+      sessionStore.touchBot(chatId, r.text);
+      return r;
+    }
+  }
 
-  if (isLegal) {
-    try {
-      const { runLegalFlow } = await import('../legal/legal-flow.js');
-      const legalResult = await runLegalFlow(chatId, text);
-      if (legalResult?.handled) {
-        const outText =
-          (legalResult.text && legalResult.text.trim()) ||
-          legalResult.rich?.intro ||
-          legalResult.rich?.text ||
-          config.fallbackMessage;
-        sessionStore.touchBot(chatId, outText);
-        return {
-          text: outText,
-          source: legalResult.source || 'legal',
-          rich: legalResult.rich || { text: outText, keepTogether: true },
-        };
-      }
-    } catch {
-      /* fallback */
+  // ── CLÍNICA ──
+  if (CLINIC_IDS.has(niche) || session.topic === 'clinic' || session.profile.clinic_step) {
+    const r = await tryDedicated(
+      'clinic',
+      async () => {
+        const { runClinicFlow } = await import('../clinic/clinic-flow.js');
+        return runClinicFlow(chatId, text);
+      },
+      fb
+    );
+    if (r) {
+      sessionStore.touchBot(chatId, r.text);
+      return r;
+    }
+  }
+
+  // ── IMOBILIÁRIA ──
+  if (RE_IDS.has(niche) || session.topic === 'realestate' || session.profile.re_step) {
+    const r = await tryDedicated(
+      'realestate',
+      async () => {
+        const { runRealestateFlow } = await import('../realestate/realestate-flow.js');
+        return runRealestateFlow(chatId, text);
+      },
+      fb
+    );
+    if (r) {
+      sessionStore.touchBot(chatId, r.text);
+      return r;
+    }
+  }
+
+  // ── RESTAURANTE ──
+  if (REST_IDS.has(niche) || session.topic === 'restaurant' || session.profile.rest_step) {
+    const r = await tryDedicated(
+      'restaurant',
+      async () => {
+        const { runRestaurantFlow } = await import('../restaurant/restaurant-flow.js');
+        return runRestaurantFlow(chatId, text);
+      },
+      fb
+    );
+    if (r) {
+      sessionStore.touchBot(chatId, r.text);
+      return r;
     }
   }
 
@@ -100,7 +155,7 @@ export async function processMessage(
           (bb.text && bb.text.trim()) ||
           bb.rich?.intro ||
           bb.rich?.text ||
-          config.fallbackMessage;
+          fb;
         sessionStore.touchBot(chatId, outText);
         return {
           text: outText,
@@ -228,12 +283,6 @@ function buildContextualFallback(config: AppConfig, chatId: string): string {
 
   if (need) {
     return `Anotado${name}: "${need}". Quer valores, agendar ou falar com um especialista?`;
-  }
-  if (s.topic === 'preco') {
-    return `Para um valor realista${name}, descreva em uma frase o que precisa.`;
-  }
-  if (s.topic === 'agendamento' || s.topic === 'legal') {
-    return `Para agendar${name}, informe o melhor dia e período.`;
   }
   if (s.greeted) {
     return `Pode detalhar um pouco mais${name}? Assim eu continuo no mesmo assunto.`;

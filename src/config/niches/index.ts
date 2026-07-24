@@ -17,13 +17,25 @@ const niches: Record<string, NicheTemplate> = {
   barbershop: barbershopNiche,
   teron: teronNiche,
   legal: legalNiche,
-  // aliases de venda
+  // aliases
   lawyer: legalNiche,
   advogado: legalNiche,
   advocacia: legalNiche,
   barbearia: barbershopNiche,
   clinica: clinicNiche,
+  dental: clinicNiche,
+  imobiliaria: realestateNiche,
+  restaurante: restaurantNiche,
 };
+
+/** Os 5 nichos principais para venda (fluxo modal dedicado) */
+export const CORE_NICHES = [
+  'barbershop',
+  'legal',
+  'clinic',
+  'realestate',
+  'restaurant',
+] as const;
 
 export function listNiches(): Array<{ id: string; name: string; description: string }> {
   const seen = new Set<string>();
