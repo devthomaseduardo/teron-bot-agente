@@ -1,18 +1,16 @@
 /**
  * Vocabulário do painel por nicho — UI universal.
- * Backend de agenda ainda usa appointments genéricos;
- * aqui só rotulamos o que o dono vê.
  */
 export type NicheLabels = {
   nicheId: string;
-  business: string; // loja / clínica / escritório
-  professional: string; // barbeiro / médico / consultor
+  business: string;
+  professional: string;
   professionals: string;
   service: string;
   services: string;
-  booking: string; // atendimento / consulta / sessão
+  booking: string;
   bookings: string;
-  queue: string; // fila / sala de espera
+  queue: string;
   client: string;
   clients: string;
   dayReport: string;
@@ -22,18 +20,42 @@ export type NicheLabels = {
 
 const MAP: Record<string, Partial<NicheLabels>> = {
   barbershop: {
-    business: 'loja',
-    professional: 'profissional',
+    business: 'barbearia',
+    professional: 'barbeiro',
     professionals: 'equipe',
     service: 'serviço',
     services: 'serviços',
-    booking: 'atendimento',
-    bookings: 'atendimentos',
+    booking: 'horário',
+    bookings: 'agendamentos',
+    queue: 'fila',
+    client: 'cliente',
+    clients: 'clientes',
+  },
+  barbearia: {
+    business: 'barbearia',
+    professional: 'barbeiro',
+    professionals: 'equipe',
+    service: 'serviço',
+    services: 'serviços',
+    booking: 'horário',
+    bookings: 'agendamentos',
     queue: 'fila',
     client: 'cliente',
     clients: 'clientes',
   },
   clinic: {
+    business: 'clínica',
+    professional: 'profissional',
+    professionals: 'equipe',
+    service: 'procedimento',
+    services: 'procedimentos',
+    booking: 'consulta',
+    bookings: 'consultas',
+    queue: 'espera',
+    client: 'paciente',
+    clients: 'pacientes',
+  },
+  clinica: {
     business: 'clínica',
     professional: 'profissional',
     professionals: 'equipe',
@@ -96,13 +118,49 @@ const MAP: Record<string, Partial<NicheLabels>> = {
   legal: {
     business: 'escritório',
     professional: 'advogado',
-    professionals: 'equipe',
-    service: 'serviço',
-    services: 'serviços',
-    booking: 'reunião',
-    bookings: 'reuniões',
+    professionals: 'equipe jurídica',
+    service: 'consulta',
+    services: 'serviços jurídicos',
+    booking: 'consulta',
+    bookings: 'consultas',
     queue: 'espera',
     client: 'cliente',
+    clients: 'clientes',
+  },
+  lawyer: {
+    business: 'escritório',
+    professional: 'advogado',
+    professionals: 'equipe jurídica',
+    service: 'consulta',
+    services: 'serviços jurídicos',
+    booking: 'consulta',
+    bookings: 'consultas',
+    queue: 'espera',
+    client: 'cliente',
+    clients: 'clientes',
+  },
+  advogado: {
+    business: 'escritório',
+    professional: 'advogado',
+    professionals: 'equipe jurídica',
+    service: 'consulta',
+    services: 'serviços jurídicos',
+    booking: 'consulta',
+    bookings: 'consultas',
+    queue: 'espera',
+    client: 'cliente',
+    clients: 'clientes',
+  },
+  teron: {
+    business: 'studio',
+    professional: 'consultor',
+    professionals: 'time',
+    service: 'projeto',
+    services: 'projetos',
+    booking: 'call',
+    bookings: 'reuniões',
+    queue: 'pipeline',
+    client: 'cliente B2B',
     clients: 'clientes',
   },
   generic: {},

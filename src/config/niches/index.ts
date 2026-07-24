@@ -6,6 +6,7 @@ import { restaurantNiche } from './restaurant.js';
 import { ecommerceNiche } from './ecommerce.js';
 import { barbershopNiche } from './barbershop.js';
 import { teronNiche } from './teron.js';
+import { legalNiche } from './legal.js';
 
 const niches: Record<string, NicheTemplate> = {
   generic: genericNiche,
@@ -15,18 +16,29 @@ const niches: Record<string, NicheTemplate> = {
   ecommerce: ecommerceNiche,
   barbershop: barbershopNiche,
   teron: teronNiche,
+  legal: legalNiche,
+  // aliases de venda
+  lawyer: legalNiche,
+  advogado: legalNiche,
+  advocacia: legalNiche,
+  barbearia: barbershopNiche,
+  clinica: clinicNiche,
 };
 
 export function listNiches(): Array<{ id: string; name: string; description: string }> {
-  return Object.values(niches).map((n) => ({
-    id: n.id,
-    name: n.name,
-    description: n.description,
-  }));
+  const seen = new Set<string>();
+  const out: Array<{ id: string; name: string; description: string }> = [];
+  for (const n of Object.values(niches)) {
+    if (seen.has(n.id)) continue;
+    seen.add(n.id);
+    out.push({ id: n.id, name: n.name, description: n.description });
+  }
+  return out;
 }
 
 export function getNiche(id: string): NicheTemplate {
-  return niches[id] || genericNiche;
+  const key = String(id || 'generic').toLowerCase().trim();
+  return niches[key] || genericNiche;
 }
 
 export { niches };
