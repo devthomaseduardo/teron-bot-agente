@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Super Admin · Agente Comercial</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark admin">AC</div>
+        <div class="brand-text">
+          <strong id="platformName">Agente Comercial</strong>
+          <span>Super-admin</span>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <div class="nav-section">Plataforma</div>
+        <button class="nav-item active" data-view="overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Overview
+        </button>
+        <button class="nav-item" data-view="tenants">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Clientes
+        </button>
+        <button class="nav-item" data-view="phases">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Roadmap
+        </button>
+        <div class="nav-section">Tenant atual</div>
+        <button class="nav-item" data-view="shop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Loja
+        </button>
+        <button class="nav-item" data-view="engine">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Motor
+        </button>
+        <button class="nav-item" data-view="health">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Saúde
+        </button>
+        <button class="nav-item" data-view="qr">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v6h-6"/></svg>
+          WhatsApp / QR
+        </button>
+        <button class="nav-item" data-view="payments">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          Pagamentos
+        </button>
+        <button class="nav-item" data-view="growth">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Growth
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/" class="btn btn-ghost btn-block">Painel do dono</a>
+        <button type="button" id="btnRefresh" class="btn btn-primary btn-block">Atualizar</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div>
+          <h1 id="viewTitle">Overview</h1>
+          <p id="viewDesc">Controle da plataforma</p>
+        </div>
+        <div class="topbar-right">
+          <span class="status-pill" id="clock">—</span>
+          <span class="status-pill online" id="apiStatus"><span class="dot"></span> Admin online</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <section id="view-overview" class="view active">
+          <div class="kpi-grid" id="kpis" style="grid-template-columns:repeat(5,1fr)"></div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><h3>Tenant em produção</h3></div>
+              <div class="card-body" id="liveBox"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Próximas ações</h3></div>
+              <div class="card-body">
+                <ol class="muted" style="margin:0;padding-left:18px;line-height:1.85">
+                  <li>Validar painel com o dono da loja</li>
+                  <li>Configurar PIX e equipe reais</li>
+                  <li>Login JWT / multi-usuário</li>
+                  <li>Provisionamento 1-click (Fase D)</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-tenants" class="view">
+          <div class="card mb-3">
+            <div class="card-header"><h3>Novo cliente</h3></div>
+            <div class="card-body">
+              <div class="form-grid">
+                <label class="field">Nome da loja<input id="tName" type="text" placeholder="Barbearia Centro" /></label>
+                <label class="field">Slug<input id="tSlug" type="text" placeholder="barbearia-centro" /></label>
+                <label class="field">Nicho<select id="tNiche"></select></label>
+                <label class="field">Plano
+                  <select id="tPlan">
+                    <option value="starter">Starter</option>
+                    <option value="pro" selected>Pro</option>
+                    <option value="business">Business</option>
+                  </select>
+                </label>
+                <div class="span-2">
+                  <button type="button" id="btnCreateTenant" class="btn btn-primary btn-lg">Criar tenant</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Clientes</h3></div>
+            <div class="card-body tight">
+              <div class="table-wrap">
+                <table class="data" id="tenantsTable">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Nicho</th>
+                      <th>Plano</th>
+                      <th>Status</th>
+                      <th>Slug</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-phases" class="view">
+          <div class="grid-3" id="phasesGrid"></div>
+        </section>
+
+        <section id="view-shop" class="view">
+          <div class="card">
+            <div class="card-header">
+              <h3>Configuração da loja</h3>
+              <button type="button" id="btnSaveShop" class="btn btn-primary btn-sm">Salvar</button>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <label class="field">Nome<input id="sName" type="text" /></label>
+                <label class="field">Telefone<input id="sPhone" type="text" /></label>
+                <label class="field span-2">Endereço<input id="sAddress" type="text" /></label>
+                <label class="field">Chave PIX<input id="sPixKey" type="text" /></label>
+                <label class="field">Nome PIX<input id="sPixName" type="text" /></label>
+                <label class="field">Latitude<input id="sLat" type="number" step="any" /></label>
+                <label class="field">Longitude<input id="sLng" type="number" step="any" /></label>
+              </div>
+              <p class="muted-sm mt-3 mb-0" id="shopMeta">—</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-engine" class="view">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h3>Motor do negócio</h3>
+              <button type="button" id="btnSaveBiz" class="btn btn-primary btn-sm">Salvar motor</button>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <label class="field">Modo
+                  <select id="bMode">
+                    <option value="script">script</option>
+                    <option value="hybrid">hybrid</option>
+                    <option value="ai">ai</option>
+                  </select>
+                </label>
+                <label class="field">Nicho<select id="bNiche"></select></label>
+                <label class="field">Sessão WhatsApp<input id="bSession" type="text" /></label>
+                <label class="field">Assistente<input id="bAssistant" type="text" /></label>
+                <label class="field span-2">Fallback<textarea id="bFallback"></textarea></label>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3>Automação</h3>
+              <button type="button" id="btnSavePlatform" class="btn btn-primary btn-sm">Salvar</button>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <label class="field">Grace no-show (min)<input id="setNoShow" type="number" /></label>
+                <label class="field">Lembrete unpaid (h)<input id="setUnpaid" type="number" /></label>
+                <label class="field">Máx. tenants<input id="setMaxTenants" type="number" /></label>
+                <label class="field">E-mail suporte<input id="setEmail" type="email" /></label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-health" class="view">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><h3>Saúde do bot</h3></div>
+              <div class="card-body" id="healthBox"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Nichos</h3></div>
+              <div class="card-body tight" id="nichesBox"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-qr" class="view">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h3>QR WhatsApp</h3>
+                <button type="button" id="btnAdminQr" class="btn btn-primary btn-sm">Atualizar</button>
+              </div>
+              <div class="card-body">
+                <div id="adminWaStatus" class="muted mb-3"></div>
+                <div id="adminQrBox" class="qr-panel"><div class="empty">Carregando…</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Instalação remota</h3></div>
+              <div class="card-body">
+                <p class="muted" style="margin-top:0;line-height:1.65">
+                  O dono abre o painel, escaneia o QR e o bot fica LIVE — sem SSH.
+                </p>
+                <div class="stat"><span>Estado</span><span id="adminWaState" class="chip">—</span></div>
+                <div class="stat"><span>Sessão</span><span id="adminWaSession" class="mono">—</span></div>
+                <div class="stat"><span>Atualizado</span><span id="adminWaUpdated" class="mono">—</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-growth" class="view">
+          <div class="card">
+            <div class="card-header"><h3>TERON Growth</h3></div>
+            <div class="card-body">
+              <p class="muted" style="margin-top:0;line-height:1.65">
+                Motor de <strong>oportunidades locais</strong> — o dono cola pedidos públicos,
+                a IA classifica e ele responde no WhatsApp com mensagem pronta.
+                Sem postar em redes (compliance).
+              </p>
+              <div class="stat"><span>Módulo</span><strong>G0 / G1 ativo no painel do dono</strong></div>
+              <div class="stat"><span>Onde</span><strong>Painel → Oportunidades</strong></div>
+              <div class="stat"><span>Docs</span><span class="mono">docs/TERON_GROWTH.md</span></div>
+              <p class="muted-sm mt-3 mb-0">
+                Próximo: fontes API (X, Reddit, portais) e match automático por raio km.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-payments" class="view">
+          <div class="kpi-grid" id="payKpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h3>Mercado Pago</h3>
+                <span class="chip blue">PIX automático</span>
+              </div>
+              <div class="card-body">
+                <p class="muted" style="margin-top:0;line-height:1.55;font-size:13px">
+                  Conecte com o <strong>Access Token</strong> do app no
+                  <a href="https://www.mercadopago.com.br/developers/panel" target="_blank" rel="noopener">painel de desenvolvedores</a>.
+                  Gera PIX real e confirma sozinho via webhook.
+                </p>
+                <div class="form-grid">
+                  <label class="field span-2">Access Token
+                    <input id="mpToken" type="password" placeholder="APP_USR-… ou TEST-…" autocomplete="off" />
+                  </label>
+                  <label class="field">Public Key (opcional)
+                    <input id="mpPublic" type="text" placeholder="APP_USR-…" />
+                  </label>
+                  <label class="field">Sandbox
+                    <select id="mpSandbox">
+                      <option value="true">Sim (teste)</option>
+                      <option value="false">Não (produção)</option>
+                    </select>
+                  </label>
+                  <label class="field span-2">
+                    <span style="display:flex;align-items:center;gap:8px">
+                      <input type="checkbox" id="mpEnabled" /> Ativar Mercado Pago
+                    </span>
+                  </label>
+                </div>
+                <p class="muted-sm mt-3">Webhook (cole no painel MP):</p>
+                <code class="mono" id="mpWebhook" style="display:block;word-break:break-all;font-size:11px;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--border)"></code>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>PIX chave (Nubank, Inter…)</h3>
+                <span class="chip ok">Prático</span>
+              </div>
+              <div class="card-body">
+                <p class="muted" style="margin-top:0;line-height:1.55;font-size:13px">
+                  Nubank e a maioria dos bancos <strong>não têm API pública de cobrança</strong> —
+                  você cadastra a <strong>chave PIX</strong> e a gente gera o copia-e-cola no WhatsApp.
+                </p>
+                <div class="form-grid">
+                  <label class="field">Banco
+                    <select id="pixBank">
+                      <option value="nubank">Nubank</option>
+                      <option value="inter">Inter</option>
+                      <option value="itau">Itaú</option>
+                      <option value="bradesco">Bradesco</option>
+                      <option value="bb">Banco do Brasil</option>
+                      <option value="caixa">Caixa</option>
+                      <option value="c6">C6 Bank</option>
+                      <option value="picpay">PicPay</option>
+                      <option value="outro">Outro</option>
+                    </select>
+                  </label>
+                  <label class="field">Nome do recebedor
+                    <input id="pixName" type="text" />
+                  </label>
+                  <label class="field span-2">Chave PIX
+                    <input id="pixKey" type="text" placeholder="email, CPF, telefone ou aleatória" />
+                  </label>
+                  <label class="field">Cidade
+                    <input id="pixCity" type="text" value="Sao Paulo" />
+                  </label>
+                  <label class="field">
+                    <span style="display:flex;align-items:center;gap:8px;margin-top:22px">
+                      <input type="checkbox" id="pixEnabled" checked /> Usar chave PIX
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3>Provedor ativo no WhatsApp</h3>
+              <div class="gap-2">
+                <button type="button" id="btnTestPix" class="btn btn-sm">Testar PIX R$1</button>
+                <button type="button" id="btnSavePay" class="btn btn-primary btn-sm">Salvar pagamentos</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <label class="field">Provedor principal
+                  <select id="payActive">
+                    <option value="mercado_pago">Mercado Pago (recomendado se tiver conta)</option>
+                    <option value="pix_key">PIX chave (Nubank / bancos)</option>
+                    <option value="manual">Só manual (maquininha / dinheiro)</option>
+                  </select>
+                </label>
+                <label class="field">Status
+                  <div id="payStatus" class="chip" style="height:40px;justify-content:flex-start;padding:0 12px">—</div>
+                </label>
+              </div>
+              <div id="payTestResult" class="muted-sm mt-3"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+  <script src="/admin.js"></script>
+</body>
+</html>

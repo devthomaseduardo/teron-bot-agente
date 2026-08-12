@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "activeConnectionId": "script-free",
+  "engineMode": "hybrid",
+  "connections": [
+    {
+      "id": "script-free",
+      "name": "Sem IA — só scripts (grátis)",
+      "type": "none",
+      "paid": false,
+      "enabled": true,
+      "notes": "Zero custo"
+    },
+    {
+      "id": "gemini-free",
+      "name": "Google Gemini (tier grátis)",
+      "type": "gemini",
+      "paid": false,
+      "enabled": true,
+      "model": "gemini-2.0-flash",
+      "apiKey": "SUA_GEMINI_KEY"
+    },
+    {
+      "id": "openai-paid",
+      "name": "OpenAI API (paga)",
+      "type": "openai",
+      "paid": true,
+      "enabled": true,
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini",
+      "apiKey": "sk-..."
+    },
+    {
+      "id": "ollama-local",
+      "name": "Ollama (local, grátis)",
+      "type": "ollama",
+      "paid": false,
+      "enabled": true,
+      "baseUrl": "http://127.0.0.1:11434",
+      "model": "llama3.2"
+    },
+    {
+      "id": "direct-paid",
+      "name": "Conexão direta paga (OpenAI-compatible)",
+      "type": "openai_compatible",
+      "paid": true,
+      "enabled": true,
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini",
+      "apiKey": "SUA_API_PAGA"
+    }
+  ],
+  "modelCache": []
+}
