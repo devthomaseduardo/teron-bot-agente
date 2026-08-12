@@ -19,6 +19,7 @@ export const c = {
   bgBlue: '\x1b[44m',
   bgGreen: '\x1b[42m',
   bgMagenta: '\x1b[45m',
+  bgYellow: '\x1b[43m',
   bgCyan: '\x1b[46m',
   bgGray: '\x1b[100m',
   bgWhite: '\x1b[47m',
